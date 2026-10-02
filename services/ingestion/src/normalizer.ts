@@ -16,6 +16,7 @@ const SUPPORTED = [
   "Avalanche",
   "Optimism",
   "Zcash",
+  "Robinhood Chain",
 ];
 
 export function normalizeProtocols(raw: LlamaProtocol[]): ProtocolTVL[] {
@@ -55,3 +56,4 @@ export function computeChainDistribution(protocols: ProtocolTVL[]): ChainTVL[] {
     .map(([chain, tvl]) => ({ chain, tvl, share: (tvl / sum) * 100 }))
     .sort((a, b) => b.tvl - a.tvl);
 }
+
