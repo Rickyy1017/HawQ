@@ -1,0 +1,31 @@
+version: "3.9"
+
+services:
+  db:
+    image: timescale/timescaledb:latest-pg16
+    container_name: hawq-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hawq
+      POSTGRES_PASSWORD: hawq_dev_password
+      POSTGRES_DB: hawq
+    ports:
+      - "5432:5432"
+    volumes:
+      - hawq_db_data:/var/lib/postgresql/data
+      - ../packages/db/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hawq -d hawq"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: hawq-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+volumes:
+  hawq_db_data:

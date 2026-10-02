@@ -1,0 +1,14 @@
+{
+  "name": "hawq",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "services/*"
+  ],
+  "scripts": {
+    "db:up": "docker compose -f infra/docker-compose.yml up -d",
+    "db:down": "docker compose -f infra/docker-compose.yml down",
+    "ingestion:dev": "bun --filter @hawq/ingestion dev",
+    "api:dev": "bun --filter @hawq/api dev"
+  }
+}
