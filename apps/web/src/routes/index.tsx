@@ -1,14 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { DollarSign, Layers, Trophy, Gauge, Search } from "lucide-react";
-import { GlassCard } from '../components/GlassCard';
-import { MetricCard } from '../components/MetricBackground';
-import { MetricSkeleton, Skeleton } from '../components/Skeleton';
-import { ChainPieChart } from '../components/charts/ChainPieCharts';
-import { TVLAreaChart } from '../components/charts/TVLAreaChart';
-import { ProtocolTable } from '../components/ProtocolTable';
-import { InsightPanel } from '../components/InsightPanel';
-import { useSearch } from '../components/SearchContext';
+import { GlassCard } from "../components/GlassCard";
+import { MetricCard } from "../components/MetricCard";
+import { MetricSkeleton, Skeleton } from "../components/Skeleton";
+import { ChainPieChart } from "../components/charts/ChainPieChart";
+import { TVLAreaChart } from "../components/charts/TVLAreaChart";
+import {
+  ChainTVLBars,
+  ProtocolTVLBars,
+  StablecoinLine,
+} from "../components/charts/MarketMiniCharts";
+import { ProtocolTable } from "../components/ProtocolTable";
+import { InsightPanel } from "../components/InsightPanel";
+import { useSearch } from "../components/SearchContext";
 import {
   useProtocols,
   useChainDistribution,
@@ -16,18 +22,33 @@ import {
   useChainActivity,
   useStablecoinSignals,
   useTotalTVLHistory,
-} from '../hooks/useDefiData';
-import { getTopProtocolsByTVL, getTotalTVL, detectMarketSignal } from '../lib/analytics/insights';
-import { formatUSD } from '../lib/format';
-import { cn } from '../lib/utils';
+} from "../hooks/useDefiData";
+import {
+  getTopProtocolsByTVL,
+  getTotalTVL,
+  detectMarketSignal,
+} from "../lib/analytics/insights";
+import { formatUSD } from "../lib/format";
+import { cn } from "../lib/utils";
+import { Button } from "../components/ui/button";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "DeFi Hawk — Multi-chain DeFi Analytics Dashboard" },
-      { name: "description", content: "Real-time multi-chain DeFi analytics: TVL, chain dominance, stablecoin signals and rule-based market intelligence." },
-      { property: "og:title", content: "DeFi Hawk — Multi-chain DeFi Analytics" },
-      { property: "og:description", content: "Track TVL, chains, stablecoins and market signals across DeFi." },
+      { title: "HawQ — Multi-chain DeFi Analytics Dashboard" },
+      {
+        name: "description",
+        content:
+          "Real-time multi-chain DeFi analytics: TVL, chain dominance, stablecoin signals and rule-based market intelligence.",
+      },
+      { property: "og:title", content: "HawQ — Multi-chain DeFi Analytics" },
+      {
+        property: "og:description",
+        content:
+          "Track TVL, chains, stablecoins and market signals across DeFi.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Dashboard,
@@ -37,7 +58,49 @@ function Dashboard() {
   const { query, setQuery } = useSearch();
   const [chainFilter, setChainFilter] = useState("All");
   const protocols = useProtocols();
-  const chains = useChainDistribution();
+  const fallbackChains = useChainDistribution();
+  const chainQuery = useQuery({
+    queryKey: ["overview-chain-tvl"],
+    queryFn: async () => {
+      const response = await fetch("https://api.llama.fi/v2/chains");
+      if (!response.ok) throw new Error("Chain TVL unavailable");
+      const raw = (await response.json()) as { name: string; tvl: number }[];
+      const supported = [
+        "Ethereum",
+        "Solana",
+        "BSC",
+        "Tron",
+        "Arbitrum",
+        "Base",
+        "Polygon",
+        "Avalanche",
+        "Optimism",
+        "Aptos",
+        "Hyperliquid",
+        "Robinhood Chain",
+        "Zcash",
+      ];
+      const rows = raw.filter(
+        (c) =>
+          supported.includes(c.name) && Number.isFinite(c.tvl) && c.tvl > 0,
+      );
+      const total = rows.reduce((sum, c) => sum + c.tvl, 0) || 1;
+      return rows
+        .map((c) => ({
+          chain: c.name,
+          tvl: c.tvl,
+          share: (c.tvl / total) * 100,
+        }))
+        .sort((a, b) => b.tvl - a.tvl);
+    },
+    staleTime: 5 * 60_000,
+    retry: 1,
+  });
+  const chains = {
+    ...chainQuery,
+    data:
+      chainQuery.data ?? fallbackChains.data?.filter((c) => c.chain !== "Sui"),
+  };
   const prices = usePrices();
   const activity = useChainActivity();
   const signals = useStablecoinSignals();
@@ -49,9 +112,10 @@ function Dashboard() {
 
   const chainTabs = useMemo(() => {
     const derived = (chains.data ?? []).map((c) => c.chain);
+    for (const c of ["Robinhood Chain", "Zcash"])
+      if (!derived.includes(c)) derived.push(c);
     return ["All", ...derived];
   }, [chains.data]);
-
 
   const filtered = useMemo(() => {
     if (!protocols.data) return [];
@@ -73,7 +137,14 @@ function Dashboard() {
   }, [protocols.data, query, chainFilter]);
 
   const insights = useMemo(() => {
-    if (!protocols.data || !chains.data || !signals.data || !activity.data || !prices.data) return [];
+    if (
+      !protocols.data ||
+      !chains.data ||
+      !signals.data ||
+      !activity.data ||
+      !prices.data
+    )
+      return [];
     return detectMarketSignal({
       protocols: protocols.data,
       chains: chains.data,
@@ -84,8 +155,11 @@ function Dashboard() {
   }, [protocols.data, chains.data, signals.data, activity.data, prices.data]);
 
   const stable = signals.data?.[signals.data.length - 1];
-  const sentiment = insights.filter((i) => i.tone === "positive").length - insights.filter((i) => i.tone === "warning").length;
-  const sentimentLabel = sentiment > 0 ? "Bullish" : sentiment < 0 ? "Cautious" : "Neutral";
+  const sentiment =
+    insights.filter((i) => i.tone === "positive").length -
+    insights.filter((i) => i.tone === "warning").length;
+  const sentimentLabel =
+    sentiment > 0 ? "Bullish" : sentiment < 0 ? "Cautious" : "Neutral";
 
   return (
     <div className="space-y-6 py-6">
@@ -96,42 +170,141 @@ function Dashboard() {
         <p className="mt-1 text-sm text-muted-foreground">
           Multi-chain DeFi intelligence across all major networks.
         </p>
-
       </div>
 
       {/* KPI row */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {protocols.isLoading ? (
-          <>{[0, 1, 2, 3].map((i) => <MetricSkeleton key={i} />)}</>
+          <>
+            {[0, 1, 2, 3].map((i) => (
+              <MetricSkeleton key={i} />
+            ))}
+          </>
         ) : (
           <>
-            <MetricCard label="Total TVL" value={totalTVL} format={(n) => formatUSD(n)} icon={DollarSign} hint="Tracked protocols" change={topProtocol?.change1d} delay={0} />
-            <MetricCard label="Active Chains" value={chains.data?.length ?? 0} format={(n) => String(Math.round(n))} icon={Layers} hint="Major networks tracked" delay={0.05} />
-            <MetricCard label="Top Protocol" value={topProtocol?.tvl ?? 0} format={(n) => formatUSD(n)} icon={Trophy} hint={topProtocol?.name} change={topProtocol?.change7d} delay={0.1} />
-            <MetricCard label="USDT Dominance" value={stable?.usdtDominance ?? 0} format={(n) => `${n.toFixed(1)}%`} icon={Gauge} hint={`Sentiment: ${sentimentLabel}`} delay={0.15} />
+            <MetricCard
+              label="Total TVL"
+              value={totalTVL}
+              format={(n) => formatUSD(n)}
+              icon={DollarSign}
+              hint="Tracked protocols"
+              change={topProtocol?.change1d}
+              delay={0}
+            />
+            <MetricCard
+              label="Active Chains"
+              value={chains.data?.length ?? 0}
+              format={(n) => String(Math.round(n))}
+              icon={Layers}
+              hint="Major networks tracked"
+              delay={0.05}
+            />
+            <MetricCard
+              label="Top Protocol"
+              value={topProtocol?.tvl ?? 0}
+              format={(n) => formatUSD(n)}
+              icon={Trophy}
+              hint={topProtocol?.name}
+              change={topProtocol?.change7d}
+              delay={0.1}
+            />
+            <MetricCard
+              label="USDT Dominance"
+              value={stable?.usdtDominance ?? 0}
+              format={(n) => `${n.toFixed(1)}%`}
+              icon={Gauge}
+              hint={`Sentiment: ${sentimentLabel}`}
+              delay={0.15}
+            />
           </>
         )}
       </div>
 
-      {/* charts row */}
-      <div className="grid gap-4 lg:grid-cols-3">
-        <GlassCard className="p-5 lg:col-span-2">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-display text-base font-semibold">Total TVL Trend</h2>
-            <span className="text-xs text-muted-foreground">Historical (DeFiLlama)</span>
+      {/* Market charts */}
+      <GlassCard className="p-5" hover={false}>
+        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-4">
+          <div>
+            <h2 className="font-display text-base font-semibold">
+              Total Value Locked in DeFi
+            </h2>
+            <p className="mt-1 font-display text-2xl font-semibold tabular-nums">
+              {history.data?.length
+                ? formatUSD(history.data[history.data.length - 1].tvl)
+                : "—"}
+            </p>
           </div>
-          <div className="h-[280px]">
-            {history.isLoading ? <Skeleton className="h-full w-full" /> : <TVLAreaChart data={history.data ?? []} />}
+          <span className="text-xs text-muted-foreground">
+            Historical TVL · DeFiLlama
+          </span>
+        </div>
+        <div className="h-[310px] sm:h-[390px]">
+          {history.isLoading ? (
+            <Skeleton className="h-full w-full" />
+          ) : (
+            <TVLAreaChart data={history.data ?? []} />
+          )}
+        </div>
+      </GlassCard>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <GlassCard className="min-w-0 p-5" hover={false}>
+          <h2 className="font-display text-sm font-semibold">
+            Largest Chains by TVL
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Top networks · DeFiLlama
+          </p>
+          <div className="mt-4 h-36">
+            {chains.isLoading ? (
+              <Skeleton className="h-full w-full" />
+            ) : (
+              <ChainTVLBars data={chains.data ?? []} />
+            )}
           </div>
         </GlassCard>
-
-        <GlassCard className="p-5" delay={0.05}>
-          <h2 className="mb-3 font-display text-base font-semibold">Chain Dominance</h2>
-          <div className="h-[280px]">
-            {chains.isLoading ? <Skeleton className="h-full w-full" /> : <ChainPieChart data={chains.data ?? []} />}
+        <GlassCard className="min-w-0 p-5" hover={false}>
+          <h2 className="font-display text-sm font-semibold">
+            Top Protocol TVL
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Largest protocols · DeFiLlama
+          </p>
+          <div className="mt-4 h-36">
+            {protocols.isLoading ? (
+              <Skeleton className="h-full w-full" />
+            ) : (
+              <ProtocolTVLBars data={top} />
+            )}
+          </div>
+        </GlassCard>
+        <GlassCard className="min-w-0 p-5" hover={false}>
+          <h2 className="font-display text-sm font-semibold">USDT Dominance</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {stable ? `${stable.usdtDominance.toFixed(1)}%` : "—"} · simulated
+            signal
+          </p>
+          <div className="mt-4 h-36">
+            {signals.isLoading ? (
+              <Skeleton className="h-full w-full" />
+            ) : (
+              <StablecoinLine data={signals.data ?? []} />
+            )}
           </div>
         </GlassCard>
       </div>
+
+      <GlassCard className="p-5" hover={false}>
+        <h2 className="mb-3 font-display text-base font-semibold">
+          Chain Dominance
+        </h2>
+        <div className="h-[240px]">
+          {chains.isLoading ? (
+            <Skeleton className="h-full w-full" />
+          ) : (
+            <ChainPieChart data={chains.data ?? []} />
+          )}
+        </div>
+      </GlassCard>
 
       {/* protocols + insight */}
       <GlassCard className="p-5" delay={0.05}>
@@ -152,7 +325,8 @@ function Dashboard() {
 
         <div className="mb-4 flex flex-wrap items-center gap-2">
           {chainTabs.map((c) => (
-            <button
+            <Button
+              variant="ghost"
               key={c}
               onClick={() => setChainFilter(c)}
               className={cn(
@@ -163,22 +337,29 @@ function Dashboard() {
               )}
             >
               {c}
-            </button>
+            </Button>
           ))}
-          <span className="ml-auto text-xs text-muted-foreground">{filtered.length} shown</span>
+          <span className="ml-auto text-xs text-muted-foreground">
+            {filtered.length} shown
+          </span>
         </div>
 
         {protocols.isLoading ? (
-          <div className="space-y-2">{[...Array(8)].map((_, i) => <Skeleton key={i} className="h-11 w-full" />)}</div>
+          <div className="space-y-2">
+            {[...Array(8)].map((_, i) => (
+              <Skeleton key={i} className="h-11 w-full" />
+            ))}
+          </div>
         ) : filtered.length ? (
           <ProtocolTable protocols={filtered} />
         ) : (
           <p className="py-8 text-center text-sm text-muted-foreground">
-            No protocols found for this filter.
+            {chainFilter === "Robinhood Chain" || chainFilter === "Zcash"
+              ? `No tracked protocols on ${chainFilter} yet; chain TVL is sourced separately.`
+              : "No protocols found for this filter."}
           </p>
         )}
       </GlassCard>
-
 
       <InsightPanel insights={insights} />
     </div>

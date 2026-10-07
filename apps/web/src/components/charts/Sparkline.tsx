@@ -9,7 +9,7 @@ export function Sparkline({
   positive?: boolean;
 }) {
   if (!data.length) return null;
-  const color = positive ? "oklch(0.72 0.17 155)" : "oklch(0.62 0.21 18)";
+  const color = positive ? "var(--chart-market)" : "var(--destructive)";
   const id = `spark-${positive ? "up" : "down"}`;
   return (
     <ResponsiveContainer width="100%" height="100%">

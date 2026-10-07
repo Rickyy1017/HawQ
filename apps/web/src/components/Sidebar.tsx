@@ -1,113 +1,204 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { cn } from "../lib/utils";
+import { Button } from "./ui/button";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Activity,
   Wrench,
-  Link2,
+  Network,
   Sprout,
   Coins,
-  Building2,
+  Landmark,
   LifeBuoy,
-  Code2,
-  Repeat,
-  TrendingUp,
+  ChevronDown,
+  CandlestickChart,
+  Vote,
   ChevronLeft,
   GitCompareArrows,
-  Wallet,
+  Eye,
   Radio,
   ShieldCheck,
+  ChartNoAxesCombined,
+  ArrowLeftRight,
+  ChartCandlestick,
+  BriefcaseBusiness,
+  BrainCircuit,
 } from "lucide-react";
 
-type NavItem = { label: string; to: string; icon: typeof LayoutDashboard; badge?: string };
+type NavItem = {
+  label: string;
+  to: string;
+  icon: typeof LayoutDashboard;
+  badge?: string;
+};
 
-const NAV: NavItem[] = [
-  { label: "Home", to: "/", icon: LayoutDashboard },
-  { label: "Activity Feed", to: "/activity", icon: Radio, badge: "Live" },
-  { label: "Compare", to: "/compare", icon: GitCompareArrows },
-  { label: "Watchlist", to: "/watchlist", icon: Wallet },
-  { label: "Track Record", to: "/track-record", icon: ShieldCheck, badge: "Walrus" },
-  { label: "Metrics", to: "/metrics", icon: Activity },
-  { label: "Tools", to: "/tools", icon: Wrench },
-  { label: "Chains", to: "/chains", icon: Link2 },
-  { label: "Yields", to: "/yields", icon: Sprout },
-  { label: "Stablecoins", to: "/stablecoins", icon: Coins },
-  { label: "RWA", to: "/rwa", icon: Building2 },
-  { label: "Support", to: "/support", icon: LifeBuoy },
-  { label: "API & MCP", to: "/api", icon: Code2 },
-  { label: "DEX Aggregator", to: "/dex", icon: Repeat },
-  { label: "Investor Relations", to: "/investors", icon: TrendingUp, badge: "New" },
-  { label: "DefiLlama Research", to: "/research", icon: TrendingUp, badge: "New" },
-];
+const GROUPS = [
+  {
+    label: "HawQ Intelligence",
+    icon: BrainCircuit,
+    items: [
+      { label: "Overview", to: "/", icon: LayoutDashboard },
+      { label: "Activity Feed", to: "/activity", icon: Radio },
+      { label: "Compare", to: "/compare", icon: GitCompareArrows },
+      { label: "Watchlist", to: "/watchlist", icon: Eye },
+      { label: "Metrics", to: "/metrics", icon: ChartNoAxesCombined },
+      { label: "Tools", to: "/tools", icon: Wrench },
+      { label: "Chains", to: "/chains", icon: Network },
+      { label: "Yields", to: "/yields", icon: Sprout },
+      { label: "Stablecoins", to: "/stablecoins", icon: Coins },
+      { label: "RWA", to: "/rwa", icon: Landmark },
+    ],
+  },
+  {
+    label: "Trade",
+    icon: CandlestickChart,
+    items: [
+      { label: "Spot", to: "/spot", icon: ArrowLeftRight },
+      { label: "Perps", to: "/perps", icon: ChartCandlestick },
+      { label: "Quant", to: "/quant", icon: ChartNoAxesCombined },
+    ],
+  },
+  {
+    label: "Predict",
+    icon: Vote,
+    items: [
+      { label: "Markets", to: "/markets", icon: Vote },
+      { label: "My Positions", to: "/my-positions", icon: BriefcaseBusiness },
+    ],
+  },
+] satisfies { label: string; icon: typeof LayoutDashboard; items: NavItem[] }[];
 
 export function Sidebar({
   collapsed,
   onToggle,
+  className,
+  mobile = false,
 }: {
   collapsed: boolean;
   onToggle: () => void;
+  className?: string;
+  mobile?: boolean;
 }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const activeGroup =
+    GROUPS.find((g) => g.items.some((i) => i.to === path))?.label ?? null;
+  const [open, setOpen] = useState<string | null>(activeGroup);
+  useEffect(() => {
+    setOpen(activeGroup);
+  }, [activeGroup]);
 
   return (
     <aside
       className={cn(
-        "glass-strong sticky top-0 z-30 flex h-screen flex-col rounded-none border-y-0 border-l-0 transition-[width] duration-300",
-        collapsed ? "w-[76px]" : "w-[244px]",
+        mobile
+          ? "flex h-full w-full flex-col"
+          : "glass-strong sticky top-0 z-30 flex h-screen flex-col rounded-none border-y-0 border-l-0 transition-[width] duration-300",
+        !mobile && (collapsed ? "w-[76px]" : "w-[244px]"),
+        className,
       )}
     >
       <div className="flex items-center gap-2.5 px-4 py-5">
         <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-lg shadow-primary/30">
-          <img src="/hawkk.jpg" alt="DeFi Hawk" className="h-9 w-9 rounded-xl object-cover" />
+          H
         </div>
         {!collapsed && (
           <div className="leading-tight">
-            <p className="font-display text-sm font-bold">DeFi Hawk</p>
-            <p className="text-[10px] text-muted-foreground">Multi-chain analytics</p>
+            <p className="font-display text-sm font-bold">HawQ</p>
+            <p className="text-[10px] text-muted-foreground">
+              Multi-chain analytics
+            </p>
           </div>
         )}
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
-        {NAV.map((item) => {
-          const active = item.to === "/" ? path === "/" : path.startsWith(item.to);
+        {GROUPS.map((group) => {
+          const expanded = open === group.label;
           return (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={cn(
-                "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all",
-                active
-                  ? "bg-primary/20 text-foreground ring-1 ring-primary/40"
-                  : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
+            <div key={group.label}>
+              <Button
+                variant="ghost"
+                title={collapsed ? group.label : undefined}
+                aria-label={group.label}
+                aria-expanded={expanded}
+                onClick={() => setOpen(expanded ? null : group.label)}
+                className={cn(
+                  "flex h-10 w-full justify-start gap-3 px-3 text-sm",
+                  activeGroup === group.label
+                    ? "text-primary"
+                    : "text-muted-foreground",
+                )}
+              >
+                <group.icon className="h-[18px] w-[18px] shrink-0" />
+                {!collapsed && (
+                  <>
+                    <span className="min-w-0 flex-1 truncate text-left">
+                      {group.label}
+                    </span>
+                    <ChevronDown
+                      className={cn(
+                        "h-4 w-4 transition-transform",
+                        expanded && "rotate-180",
+                      )}
+                    />
+                  </>
+                )}
+              </Button>
+              {expanded && !collapsed && (
+                <div className="ml-3 border-l border-border/70 pl-2">
+                  {group.items.map((item) => (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      className={cn(
+                        "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                        path === item.to
+                          ? "bg-primary/20 text-foreground ring-1 ring-primary/40"
+                          : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
+                      )}
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{item.label}</span>
+                    </Link>
+                  ))}
+                </div>
               )}
-            >
-              {active && (
-                <motion.span
-                  layoutId="nav-glow"
-                  className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-primary shadow-[0_0_12px_2px] shadow-primary/60"
-                />
-              )}
-              <item.icon className="h-[18px] w-[18px] shrink-0" />
-              {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
-              {!collapsed && item.badge && (
-                <span className="rounded-md bg-accent/20 px-1.5 py-0.5 text-[10px] font-semibold text-accent">
-                  {item.badge}
-                </span>
-              )}
-            </Link>
+            </div>
           );
         })}
+        <div className="mt-3 border-t border-border/70 pt-3">
+          <Link
+            to="/support"
+            title={collapsed ? "Support" : undefined}
+            className={cn(
+              "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm",
+              path === "/support"
+                ? "bg-primary/20 text-foreground"
+                : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
+            )}
+          >
+            <LifeBuoy className="h-[18px] w-[18px] shrink-0" />
+            {!collapsed && "Support"}
+          </Link>
+        </div>
       </nav>
 
-      <button
+      <Button
+        variant="secondary"
+        size="icon"
         onClick={onToggle}
-        className="m-3 flex items-center justify-center gap-2 rounded-xl bg-secondary/50 py-2 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        className={cn("m-3 shrink-0 self-center", mobile && "hidden")}
       >
-        <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed && "rotate-180")} />
-        {!collapsed && "Collapse"}
-      </button>
+        <ChevronLeft
+          className={cn(
+            "h-4 w-4 transition-transform",
+            collapsed && "rotate-180",
+          )}
+        />
+      </Button>
     </aside>
   );
 }

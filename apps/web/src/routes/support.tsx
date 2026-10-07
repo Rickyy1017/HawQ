@@ -1,14 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { GlassCard } from '../components/GlassCard';
-import { cn } from '../lib/utils';
-import { LifeBuoy, ChevronDown, Mail, BookOpen, MessageSquare } from "lucide-react";
+import { GlassCard } from "../components/GlassCard";
+import { cn } from "../lib/utils";
+import { LifeBuoy, ChevronDown, BookOpen, MessageSquare } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/support")({
   head: () => ({
     meta: [
-      { title: "Support — DeFi-Wolf" },
-      { name: "description", content: "Help center, FAQs and contact options for DeFi-Wolf analytics." },
+      { title: "Support — HawQ" },
+      {
+        name: "description",
+        content: "Help center, FAQs and contact options for HawQ analytics.",
+      },
+      { property: "og:title", content: "Support — HawQ" },
+      {
+        property: "og:description",
+        content: "Help center, FAQs and contact options for HawQ analytics.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: SupportPage,
@@ -16,8 +26,8 @@ export const Route = createFileRoute("/support")({
 
 const FAQS = [
   {
-    q: "Where does DeFi-Wolf data come from?",
-    a: "TVL and protocol data is sourced live from the DeFiLlama public API, while token prices are pulled from CoinGecko. Everything passes through a normalization layer to a unified data model before display.",
+    q: "Where does HawQ data come from?",
+    a: "TVL and protocol data is sourced from DeFiLlama. BTC, ETH and USDT prices use Chainlink Ethereum price feeds when available, then CoinGecko, with demo prices as a last fallback.",
   },
   {
     q: "How often is the data refreshed?",
@@ -33,7 +43,7 @@ const FAQS = [
   },
   {
     q: "Which chains are supported?",
-    a: "DeFi-Wolf indexes 12+ major networks including Ethereum, Solana, BSC, Arbitrum, Base, Polygon, Sui and more.",
+    a: "HawQ tracks major networks including Ethereum, Solana, BSC, Arbitrum, Base, Polygon, Robinhood Chain and Zcash.",
   },
 ];
 
@@ -51,11 +61,18 @@ function SupportPage() {
         </p>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
         {[
-          { icon: BookOpen, title: "Documentation", desc: "Guides and API references" },
-          { icon: MessageSquare, title: "Community", desc: "Join the Discord discussion" },
-          { icon: Mail, title: "Email", desc: "support@defiwolf.app" },
+          {
+            icon: BookOpen,
+            title: "Documentation",
+            desc: "Guides and API references",
+          },
+          {
+            icon: MessageSquare,
+            title: "Community",
+            desc: "Join the Discord discussion",
+          },
         ].map((c, i) => (
           <GlassCard key={c.title} delay={i * 0.05} className="p-5">
             <div className="mb-2 inline-flex rounded-xl bg-primary/15 p-2.5 text-primary ring-1 ring-primary/20">
@@ -70,20 +87,32 @@ function SupportPage() {
       <GlassCard className="p-5">
         <div className="mb-4 flex items-center gap-2">
           <LifeBuoy className="h-5 w-5 text-primary" />
-          <h2 className="font-display text-lg font-semibold">Frequently Asked Questions</h2>
+          <h2 className="font-display text-lg font-semibold">
+            Frequently Asked Questions
+          </h2>
         </div>
         <div className="space-y-2">
           {FAQS.map((f, i) => (
-            <div key={f.q} className="overflow-hidden rounded-xl border border-border bg-secondary/20">
+            <div
+              key={f.q}
+              className="overflow-hidden rounded-xl border border-border bg-secondary/20"
+            >
               <button
                 onClick={() => setOpen(open === i ? null : i)}
                 className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium"
               >
                 {f.q}
-                <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", open === i && "rotate-180")} />
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 shrink-0 transition-transform",
+                    open === i && "rotate-180",
+                  )}
+                />
               </button>
               {open === i && (
-                <p className="border-t border-border px-4 py-3 text-sm text-muted-foreground">{f.a}</p>
+                <p className="border-t border-border px-4 py-3 text-sm text-muted-foreground">
+                  {f.a}
+                </p>
               )}
             </div>
           ))}

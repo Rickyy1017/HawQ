@@ -25,6 +25,7 @@ export type PricePoint = {
   symbol: string;
   price: number;
   change24h: number;
+  source?: "Chainlink" | "CoinGecko" | "Mock";
 };
 
 export type TVLHistoryPoint = {
@@ -53,7 +54,8 @@ export type MarketInsight = {
   tone: "positive" | "warning" | "neutral";
 };
 
-export type EventType = "deposit" | "withdrawal" | "swap" | "tvl_spike" | "whale_move";
+export type EventType =
+  "deposit" | "withdrawal" | "swap" | "tvl_spike" | "whale_move";
 
 export type ProtocolEvent = {
   id: string;
@@ -87,18 +89,16 @@ export type WalletBalance = {
   recentEvents: ProtocolEvent[];
 };
 
-// ── Sui / Tatum types ──────────────────────────────────────────────────────
-export type SuiCoinBalance = {
+export type SuiTokenBalance = {
   coinType: string;
   symbol: string;
   balance: number;
-  usdValue?: number;
 };
 
 export type SuiWalletData = {
   address: string;
   suiBalance: number;
-  tokens: SuiCoinBalance[];
+  tokens: SuiTokenBalance[];
   recentTxCount: number;
   lastTxDigest?: string;
   fetchedAt: number;
@@ -108,18 +108,13 @@ export type SuiTransaction = {
   digest: string;
   timestampMs: number;
   type: string;
-  amountSui?: number;
-  status: "success" | "failure";
+  status: "success" | "failed" | "pending";
 };
 
-// ── Walrus types ───────────────────────────────────────────────────────────
-export type WalrusBlob = {
+export type WalrusWriteResult = {
   blobId: string;
-  entityType: "signal" | "insight" | "whale_alert" | "wallet_analysis";
-  entityId: string;
-  sizeBytes: number;
-  storedAt: number;
   verifyUrl: string;
+  sizeBytes: number;
 };
 
 export type AiSignal = {
@@ -131,14 +126,15 @@ export type AiSignal = {
   reasoning: string;
   walletRefs: string[];
   generatedAt: number;
-  walrusBlobId?: string;
-  verifyUrl?: string;
-  resolved?: boolean;
-  outcome?: boolean;
+  walrusBlobId: string;
+  verifyUrl: string;
 };
 
-export type WalrusWriteResult = {
+export type WalrusBlob = {
   blobId: string;
-  verifyUrl: string;
-  sizeBytes: number;
+  type?: string;
+  version?: string;
+  platform?: string;
+  storedAt?: number;
+  [key: string]: unknown;
 };

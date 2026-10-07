@@ -1,7 +1,7 @@
 import { GlassCard } from "./GlassCard";
 import { AnimatedNumber } from "./AnimatedNumber";
-import { cn } from '../lib/utils';
-import { formatPct } from '../lib/format';
+import { cn } from "../lib/utils";
+import { formatPct } from "../lib/format";
 import type { LucideIcon } from "lucide-react";
 
 export function MetricCard({
@@ -43,7 +43,9 @@ export function MetricCard({
           <span
             className={cn(
               "rounded-md px-1.5 py-0.5 text-xs font-semibold",
-              positive ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive",
+              positive
+                ? "bg-success/15 text-success"
+                : "bg-destructive/15 text-destructive",
             )}
           >
             {formatPct(change)}

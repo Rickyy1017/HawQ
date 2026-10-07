@@ -1,4 +1,9 @@
-import type { ProtocolTVL, ProtocolEvent, EventType, WalletBalance } from '../../types';
+import type {
+  ProtocolTVL,
+  ProtocolEvent,
+  EventType,
+  WalletBalance,
+} from "../../types";
 
 export const EVENT_TYPES: EventType[] = [
   "deposit",
@@ -16,7 +21,11 @@ export const EVENT_META: Record<
   withdrawal: { label: "Withdrawal", verb: "withdrew from", tone: "warning" },
   swap: { label: "Swap", verb: "swapped on", tone: "neutral" },
   tvl_spike: { label: "TVL Spike", verb: "TVL surged on", tone: "positive" },
-  whale_move: { label: "Whale Move", verb: "large transfer on", tone: "neutral" },
+  whale_move: {
+    label: "Whale Move",
+    verb: "large transfer on",
+    tone: "neutral",
+  },
 };
 
 /** Deterministic PRNG (mulberry32) so a given seed yields reproducible output. */
@@ -115,7 +124,8 @@ export function computeWalletBalance(
   const positions = [];
   for (let i = 0; i < positionCount && pool.length; i++) {
     let pi = Math.floor(rand() * pool.length);
-    while (chosen.has(pi) && chosen.size < pool.length) pi = (pi + 1) % pool.length;
+    while (chosen.has(pi) && chosen.size < pool.length)
+      pi = (pi + 1) % pool.length;
     chosen.add(pi);
     const p = pool[pi];
     const chains = p.chains.length ? p.chains : [p.chain];
@@ -148,5 +158,12 @@ export function computeWalletBalance(
     }))
     .sort((a, b) => b.timestamp - a.timestamp);
 
-  return { address, totalUSD, change24h, positions, lastActivity, recentEvents };
+  return {
+    address,
+    totalUSD,
+    change24h,
+    positions,
+    lastActivity,
+    recentEvents,
+  };
 }

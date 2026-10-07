@@ -1,7 +1,7 @@
-import type { ProtocolTVL, ChainTVL } from '../../types';
-import { ProtocolTVLSchema } from '../../types';
-import type { LlamaProtocol } from '../api/defiLlama';
-import { MOCK_PROTOCOLS } from '../mock/data';
+import type { ProtocolTVL, ChainTVL } from "@/types";
+import { ProtocolTVLSchema } from "@/types";
+import type { LlamaProtocol } from "@/lib/api/defiLlama";
+import { MOCK_PROTOCOLS } from "@/lib/mock/data";
 
 const SUPPORTED = [
   "Ethereum",
@@ -13,7 +13,8 @@ const SUPPORTED = [
   "Polygon",
   "Avalanche",
   "Optimism",
-  "Sui",
+  "Robinhood Chain",
+  "Zcash",
   "Aptos",
   "Hyperliquid",
 ];
@@ -53,7 +54,9 @@ export function computeChainDistribution(protocols: ProtocolTVL[]): ChainTVL[] {
     const per = p.tvl / list.length;
     for (const c of list) totals[c] = (totals[c] ?? 0) + per;
   }
-  const filtered = Object.entries(totals).filter(([c]) => SUPPORTED.includes(c));
+  const filtered = Object.entries(totals).filter(([c]) =>
+    SUPPORTED.includes(c),
+  );
   const sum = filtered.reduce((a, [, v]) => a + v, 0) || 1;
   return filtered
     .map(([chain, tvl]) => ({ chain, tvl, share: (tvl / sum) * 100 }))

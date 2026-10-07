@@ -1,6 +1,6 @@
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
-import { formatUSD } from '../../lib/format';
-import type { ChainTVL } from '../../types';
+import { formatUSD } from "../../lib/format";
+import type { ChainTVL } from "../../types";
 
 const COLORS = [
   "oklch(0.62 0.21 300)",
@@ -16,15 +16,17 @@ function ChainTooltip({ active, payload }: any) {
   return (
     <div className="glass-strong rounded-xl px-3 py-2 text-xs">
       <p className="font-semibold">{d.chain}</p>
-      <p className="text-muted-foreground">{formatUSD(d.tvl)} · {d.share.toFixed(1)}%</p>
+      <p className="text-muted-foreground">
+        {formatUSD(d.tvl)} · {d.share.toFixed(1)}%
+      </p>
     </div>
   );
 }
 
 export function ChainPieChart({ data }: { data: ChainTVL[] }) {
   return (
-    <div className="flex h-full items-center gap-4">
-      <div className="h-[180px] flex-1">
+    <div className="flex h-full min-w-0 items-center gap-2">
+      <div className="h-[180px] min-w-0 flex-1">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -44,12 +46,23 @@ export function ChainPieChart({ data }: { data: ChainTVL[] }) {
           </PieChart>
         </ResponsiveContainer>
       </div>
-      <div className="space-y-2 pr-2">
+      <div className="max-h-full min-w-[118px] max-w-[155px] overflow-y-auto pr-1">
         {data.map((d, i) => (
-          <div key={d.chain} className="flex items-center gap-2 text-sm">
-            <span className="h-2.5 w-2.5 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />
-            <span className="text-muted-foreground">{d.chain}</span>
-            <span className="ml-auto font-medium">{d.share.toFixed(0)}%</span>
+          <div
+            key={d.chain}
+            className="flex min-h-5 items-center gap-1 text-xs"
+          >
+            <span
+              className="h-2 w-2 shrink-0 rounded-full"
+              style={{ background: COLORS[i % COLORS.length] }}
+            />
+            <span
+              className="min-w-0 flex-1 truncate text-muted-foreground"
+              title={d.chain}
+            >
+              {d.chain}
+            </span>
+            <span className="font-medium">{d.share.toFixed(0)}%</span>
           </div>
         ))}
       </div>

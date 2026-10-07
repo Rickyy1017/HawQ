@@ -2,23 +2,31 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Plus, Trash2, Wallet, Radio, AlertCircle } from "lucide-react";
-import { GlassCard } from '../components/GlassCard';
-import { Skeleton } from '../components/Skeleton';
-import { useWatchlistBalances } from '../hooks/useDefiData';
-import { isValidAddress } from '../lib/analytics/evens';
-import { formatUSD, formatPct, timeAgo, shortenAddress } from '../lib/format';
-import { cn } from '../lib/utils';
-import type { WalletBalance } from '../types';
+import { GlassCard } from "@/components/GlassCard";
+import { Skeleton } from "@/components/Skeleton";
+import { useWatchlistBalances } from "@/hooks/useDefiData";
+import { isValidAddress } from "@/lib/analytics/events";
+import { formatUSD, formatPct, timeAgo, shortenAddress } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import type { WalletBalance } from "@/types";
 
 export const Route = createFileRoute("/watchlist")({
   head: () => ({
     meta: [
-      { title: "Whale Watchlist — DeFi-Wolf" },
+      { title: "Whale Watchlist — HawQ" },
       {
         name: "description",
         content:
           "Track wallet addresses and monitor their DeFi positions, balances and recent protocol activity with real-time updates.",
       },
+      { property: "og:title", content: "Whale Watchlist — HawQ" },
+      {
+        property: "og:description",
+        content:
+          "Track wallet addresses and monitor their DeFi positions, balances and recent protocol activity with real-time updates.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: WatchlistPage,
@@ -87,7 +95,8 @@ function WatchlistPage() {
           </span>
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Add wallet addresses to track positions, balances and recent protocol activity in real time.
+          Add wallet addresses to track positions, balances and recent protocol
+          activity in real time.
         </p>
       </div>
 
@@ -118,8 +127,11 @@ function WatchlistPage() {
         )}
         {addresses.length > 0 && (
           <p className="mt-3 text-xs text-muted-foreground">
-            Tracking {addresses.length} wallet{addresses.length > 1 ? "s" : ""} · combined value{" "}
-            <span className="font-semibold text-foreground">{formatUSD(totalTracked)}</span>
+            Tracking {addresses.length} wallet{addresses.length > 1 ? "s" : ""}{" "}
+            · combined value{" "}
+            <span className="font-semibold text-foreground">
+              {formatUSD(totalTracked)}
+            </span>
           </p>
         )}
       </GlassCard>
@@ -129,7 +141,9 @@ function WatchlistPage() {
           <div className="rounded-2xl bg-primary/15 p-5 text-primary ring-1 ring-primary/20">
             <Wallet className="h-8 w-8" />
           </div>
-          <p className="font-display text-lg font-semibold">No wallets tracked yet</p>
+          <p className="font-display text-lg font-semibold">
+            No wallets tracked yet
+          </p>
           <p className="max-w-md text-sm text-muted-foreground">
             Paste any EVM address above to start monitoring its DeFi footprint.
           </p>
@@ -143,7 +157,12 @@ function WatchlistPage() {
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
           {balances.map((b, i) => (
-            <WalletCard key={b.address} balance={b} onRemove={() => remove(b.address)} delay={i * 0.05} />
+            <WalletCard
+              key={b.address}
+              balance={b}
+              onRemove={() => remove(b.address)}
+              delay={i * 0.05}
+            />
           ))}
         </div>
       )}
@@ -168,8 +187,12 @@ function WalletCard({
           <Wallet className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-mono text-sm font-medium">{shortenAddress(balance.address)}</p>
-          <p className="text-xs text-muted-foreground">Last active {timeAgo(balance.lastActivity)}</p>
+          <p className="truncate font-mono text-sm font-medium">
+            {shortenAddress(balance.address)}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Last active {timeAgo(balance.lastActivity)}
+          </p>
         </div>
         <button
           onClick={onRemove}
@@ -181,20 +204,28 @@ function WalletCard({
 
       <div className="mb-4 flex items-end justify-between rounded-xl bg-secondary/30 p-4">
         <div>
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Portfolio value</p>
-          <p className="font-display text-2xl font-semibold">{formatUSD(balance.totalUSD)}</p>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            Portfolio value
+          </p>
+          <p className="font-display text-2xl font-semibold">
+            {formatUSD(balance.totalUSD)}
+          </p>
         </div>
         <span
           className={cn(
             "rounded-md px-2 py-1 text-xs font-semibold",
-            positive ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive",
+            positive
+              ? "bg-success/15 text-success"
+              : "bg-destructive/15 text-destructive",
           )}
         >
           {formatPct(balance.change24h)} 24h
         </span>
       </div>
 
-      <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">Positions</p>
+      <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">
+        Positions
+      </p>
       <div className="mb-4 space-y-1.5">
         {balance.positions.map((pos) => (
           <Link
@@ -214,7 +245,9 @@ function WalletCard({
         ))}
       </div>
 
-      <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">Recent activity</p>
+      <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">
+        Recent activity
+      </p>
       <div className="space-y-1.5">
         {balance.recentEvents.slice(0, 4).map((e) => (
           <div key={e.id} className="flex items-center justify-between text-xs">

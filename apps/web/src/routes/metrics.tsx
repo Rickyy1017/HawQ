@@ -1,19 +1,37 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { GlassCard } from '../components/GlassCard';
-import { MetricCard } from '../components/MetricBackground';
-import { Skeleton } from '../components/Skeleton';
-import { useProtocols } from '../hooks/useDefiData';
-import { getTotalTVL } from '../lib/analytics/insights';
-import { formatUSD, formatNum, formatPct } from '../lib/format';
-import { cn } from '../lib/utils';
-import { Activity, Layers, TrendingUp, TrendingDown, Boxes } from "lucide-react";
+import { GlassCard } from "@/components/GlassCard";
+import { MetricCard } from "@/components/MetricCard";
+import { Skeleton } from "@/components/Skeleton";
+import { useProtocols } from "@/hooks/useDefiData";
+import { getTotalTVL } from "@/lib/analytics/insights";
+import { formatUSD, formatNum, formatPct } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import {
+  Activity,
+  Layers,
+  TrendingUp,
+  TrendingDown,
+  Boxes,
+} from "lucide-react";
 import { useMemo } from "react";
 
 export const Route = createFileRoute("/metrics")({
   head: () => ({
     meta: [
-      { title: "Metrics — DeFi Hawk" },
-      { name: "description", content: "Aggregate DeFi metrics: total TVL, protocol counts, category breakdown, top movers." },
+      { title: "Metrics — HawQ" },
+      {
+        name: "description",
+        content:
+          "Aggregate DeFi metrics: total TVL, protocol counts, category breakdown, top movers.",
+      },
+      { property: "og:title", content: "Metrics — HawQ" },
+      {
+        property: "og:description",
+        content:
+          "Aggregate DeFi metrics: total TVL, protocol counts, category breakdown, top movers.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: MetricsPage,
@@ -36,10 +54,15 @@ function MetricsPage() {
       .sort((a, b) => b.tvl - a.tvl)
       .slice(0, 8);
     const withChange = protocols.filter((p) => typeof p.change1d === "number");
-    const gainers = [...withChange].sort((a, b) => (b.change1d ?? 0) - (a.change1d ?? 0)).slice(0, 5);
-    const losers = [...withChange].sort((a, b) => (a.change1d ?? 0) - (b.change1d ?? 0)).slice(0, 5);
+    const gainers = [...withChange]
+      .sort((a, b) => (b.change1d ?? 0) - (a.change1d ?? 0))
+      .slice(0, 5);
+    const losers = [...withChange]
+      .sort((a, b) => (a.change1d ?? 0) - (b.change1d ?? 0))
+      .slice(0, 5);
     const avgChange =
-      withChange.reduce((s, p) => s + (p.change1d ?? 0), 0) / (withChange.length || 1);
+      withChange.reduce((s, p) => s + (p.change1d ?? 0), 0) /
+      (withChange.length || 1);
     return {
       totalTVL,
       count: protocols.length,
@@ -72,19 +95,46 @@ function MetricsPage() {
           <span className="text-gradient">Metrics</span>
         </h1>
         <p className="text-sm text-muted-foreground">
-          Aggregate protocol and category metrics across the indexed DeFi universe.
+          Aggregate protocol and category metrics across the indexed DeFi
+          universe.
         </p>
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Total TVL" value={stats.totalTVL} format={(n) => formatUSD(n)} icon={Activity} hint="all protocols" />
-        <MetricCard label="Protocols Tracked" value={stats.count} format={(n) => formatNum(n)} icon={Boxes} />
-        <MetricCard label="Categories" value={stats.categoryCount} format={(n) => formatNum(n)} icon={Layers} delay={0.05} />
-        <MetricCard label="Avg 24h Change" value={stats.avgChange} format={(n) => formatPct(n)} change={stats.avgChange} icon={TrendingUp} delay={0.1} />
+        <MetricCard
+          label="Total TVL"
+          value={stats.totalTVL}
+          format={(n) => formatUSD(n)}
+          icon={Activity}
+          hint="all protocols"
+        />
+        <MetricCard
+          label="Protocols Tracked"
+          value={stats.count}
+          format={(n) => formatNum(n)}
+          icon={Boxes}
+        />
+        <MetricCard
+          label="Categories"
+          value={stats.categoryCount}
+          format={(n) => formatNum(n)}
+          icon={Layers}
+          delay={0.05}
+        />
+        <MetricCard
+          label="Avg 24h Change"
+          value={stats.avgChange}
+          format={(n) => formatPct(n)}
+          change={stats.avgChange}
+          icon={TrendingUp}
+          delay={0.1}
+        />
       </div>
 
       <GlassCard className="p-5">
-        <h2 className="mb-4 font-display text-lg font-semibold">TVL by Category</h2>
+        <h2 className="mb-4 font-display text-lg font-semibold">
+          TVL by Category
+        </h2>
         <div className="space-y-3">
           {stats.topCategories.map((c) => (
             <div key={c.name} className="space-y-1.5">
@@ -107,7 +157,11 @@ function MetricsPage() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <MoverList title="Top Gainers (24h)" items={stats.gainers} positive />
-        <MoverList title="Top Losers (24h)" items={stats.losers} positive={false} />
+        <MoverList
+          title="Top Losers (24h)"
+          items={stats.losers}
+          positive={false}
+        />
       </div>
     </div>
   );
@@ -134,14 +188,19 @@ function MoverList({
       </div>
       <div className="space-y-2">
         {items.map((p) => (
-          <div key={p.name} className="flex items-center justify-between rounded-lg bg-secondary/30 px-3 py-2 text-sm">
+          <div
+            key={p.name}
+            className="flex items-center justify-between rounded-lg bg-secondary/30 px-3 py-2 text-sm"
+          >
             <span className="font-medium">{p.name}</span>
             <div className="flex items-center gap-3">
               <span className="text-muted-foreground">{formatUSD(p.tvl)}</span>
               <span
                 className={cn(
                   "rounded-md px-1.5 py-0.5 text-xs font-semibold",
-                  (p.change1d ?? 0) >= 0 ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive",
+                  (p.change1d ?? 0) >= 0
+                    ? "bg-success/15 text-success"
+                    : "bg-destructive/15 text-destructive",
                 )}
               >
                 {formatPct(p.change1d)}

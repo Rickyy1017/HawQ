@@ -21,14 +21,15 @@ export function ComingSoon({
           <Icon className="h-8 w-8" />
         </div>
         <div>
-          <p className="font-display text-lg font-semibold">Module in development</p>
+          <p className="font-display text-lg font-semibold">
+            Module in development
+          </p>
           <p className="mt-1 max-w-md text-sm text-muted-foreground">
-            This section is part of the DeFi Hawk roadmap. The Home dashboard is the live,
-            data-driven analytics surface for this MVP.
+            This section is part of the HawQ roadmap. The Home dashboard is the
+            live, data-driven analytics surface for this MVP.
           </p>
         </div>
       </GlassCard>
     </div>
   );
 }
-

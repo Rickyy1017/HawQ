@@ -1,5 +1,5 @@
-import type { ChainActivity, StablecoinSignal } from '../../types';
-import { MOCK_ACTIVITY, buildMockStablecoinSignals } from '../mock/data';
+import type { ChainActivity, StablecoinSignal } from "../../types";
+import { MOCK_ACTIVITY, buildMockStablecoinSignals } from "../mock/data";
 
 /**
  * Chain transaction signals. Etherscan/BSCScan require API keys, so we expose

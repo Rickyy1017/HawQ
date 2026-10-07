@@ -14,7 +14,10 @@ export async function cached<T>(
   return value;
 }
 
-export async function safeFetch<T>(url: string, init?: RequestInit): Promise<T> {
+export async function safeFetch<T>(
+  url: string,
+  init?: RequestInit,
+): Promise<T> {
   const ctrl = new AbortController();
   const timeout = setTimeout(() => ctrl.abort(), 12000);
   try {

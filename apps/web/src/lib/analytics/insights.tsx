@@ -5,7 +5,7 @@ import type {
   ChainActivity,
   PricePoint,
   MarketInsight,
-} from '../../types';
+} from "../../types";
 
 export function getTopProtocolsByTVL(p: ProtocolTVL[], n = 10): ProtocolTVL[] {
   return [...p].sort((a, b) => b.tvl - a.tvl).slice(0, n);

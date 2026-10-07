@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { formatUSD, formatPct } from '../lib/format';
-import { cn } from '../lib/utils';
-import type { ProtocolTVL } from '../types';
+import { formatUSD, formatPct } from "../lib/format";
+import { cn } from "../lib/utils";
+import type { ProtocolTVL } from "../types";
 
 export function ProtocolTable({ protocols }: { protocols: ProtocolTVL[] }) {
   return (
@@ -12,10 +12,14 @@ export function ProtocolTable({ protocols }: { protocols: ProtocolTVL[] }) {
             <th className="py-2 pl-2 pr-3 font-medium">#</th>
             <th className="px-3 py-2 font-medium">Protocol</th>
             <th className="px-3 py-2 font-medium">Chain</th>
-            <th className="hidden px-3 py-2 font-medium md:table-cell">Category</th>
+            <th className="hidden px-3 py-2 font-medium md:table-cell">
+              Category
+            </th>
             <th className="px-3 py-2 text-right font-medium">TVL</th>
             <th className="px-3 py-2 text-right font-medium">1d</th>
-            <th className="hidden px-3 py-2 text-right font-medium md:table-cell">7d</th>
+            <th className="hidden px-3 py-2 text-right font-medium md:table-cell">
+              7d
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -32,7 +36,12 @@ export function ProtocolTable({ protocols }: { protocols: ProtocolTVL[] }) {
                   className="flex items-center gap-2.5 font-medium transition-colors group-hover:text-primary"
                 >
                   {p.logo ? (
-                    <img src={p.logo} alt="" className="h-6 w-6 rounded-full ring-1 ring-border" loading="lazy" />
+                    <img
+                      src={p.logo}
+                      alt=""
+                      className="h-6 w-6 rounded-full ring-1 ring-border"
+                      loading="lazy"
+                    />
                   ) : (
                     <span className="grid h-6 w-6 place-items-center rounded-full bg-primary/15 text-[10px] text-primary">
                       {p.name.slice(0, 2)}
@@ -42,12 +51,26 @@ export function ProtocolTable({ protocols }: { protocols: ProtocolTVL[] }) {
                 </Link>
               </td>
               <td className="px-3 py-3 text-muted-foreground">{p.chain}</td>
-              <td className="hidden px-3 py-3 text-muted-foreground md:table-cell">{p.category ?? "—"}</td>
-              <td className="px-3 py-3 text-right font-medium">{formatUSD(p.tvl)}</td>
-              <td className={cn("px-3 py-3 text-right", (p.change1d ?? 0) >= 0 ? "text-success" : "text-destructive")}>
+              <td className="hidden px-3 py-3 text-muted-foreground md:table-cell">
+                {p.category ?? "—"}
+              </td>
+              <td className="px-3 py-3 text-right font-medium">
+                {formatUSD(p.tvl)}
+              </td>
+              <td
+                className={cn(
+                  "px-3 py-3 text-right",
+                  (p.change1d ?? 0) >= 0 ? "text-success" : "text-destructive",
+                )}
+              >
                 {formatPct(p.change1d)}
               </td>
-              <td className={cn("hidden px-3 py-3 text-right md:table-cell", (p.change7d ?? 0) >= 0 ? "text-success" : "text-destructive")}>
+              <td
+                className={cn(
+                  "hidden px-3 py-3 text-right md:table-cell",
+                  (p.change7d ?? 0) >= 0 ? "text-success" : "text-destructive",
+                )}
+              >
                 {formatPct(p.change7d)}
               </td>
             </tr>

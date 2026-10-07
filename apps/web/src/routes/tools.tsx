@@ -3,27 +3,18 @@ import { GlassCard } from "@/components/GlassCard";
 import { Skeleton } from "@/components/Skeleton";
 import { useProtocols, usePrices } from "@/hooks/useDefiData";
 import { formatUSD } from "@/lib/format";
-import {
-  Download,
-  Calculator,
-  FileJson,
-  Table2,
-  ShieldCheck,
-  Loader2,
-  Copy,
-  Check,
-} from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Download, Calculator, FileJson, Table2 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { publishToWalrus, proofUrl } from "../lib/walrus/client";
-import { WalrusBadge } from "../components/WalrusBadge";
-import type { WalrusArtifact, WalrusArtifactKind } from "../lib/walrus/config";
 
 export const Route = createFileRoute("/tools")({
   head: () => ({
     meta: [
-        { title: "Tools — DeFi Hawk" },
+      { title: "Tools � HawQ" },
       { name: "description", content: "Analyst utilities: export protocol data and run a position value calculator." },
+      { property: "og:title", content: "Tools � HawQ" },
+      { property: "og:description", content: "Analyst utilities: export protocol data and run a position value calculator."  },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ToolsPage,
@@ -52,66 +43,6 @@ function ToolsPage() {
     return amt * price;
   }, [tokenAmt, tokenSym, prices]);
 
-  // ---- Publish to Walrus ----
-  const [reportKind, setReportKind] = useState<WalrusArtifactKind>("token-report");
-  const [reportSubject, setReportSubject] = useState("");
-  const [publishing, setPublishing] = useState(false);
-  const [published, setPublished] = useState<WalrusArtifact | null>(null);
-  const [publishErr, setPublishErr] = useState<string | null>(null);
-  const [linkCopied, setLinkCopied] = useState(false);
-
-  const buildReportPayload = () => {
-    const subject = reportSubject.trim() || "Top DeFi Protocols";
-    const top = (protocols ?? []).slice(0, 10).map((p) => ({
-      name: p.name,
-      chain: p.chain,
-      category: p.category,
-      tvl: p.tvl,
-      change1d: p.change1d,
-      change7d: p.change7d,
-    }));
-    const totalTVL = top.reduce((s, p) => s + (p.tvl ?? 0), 0);
-    return {
-      subject,
-      summary: `${reportKind.replace("-", " ")} covering ${top.length} protocols — combined TVL ${formatUSD(totalTVL)}.`,
-      payload: {
-        report: reportKind,
-        subject,
-        totalTVL,
-        protocols: top,
-        prices: prices ?? [],
-      },
-    };
-  };
-
-  const handlePublish = async () => {
-    setPublishing(true);
-    setPublishErr(null);
-    setPublished(null);
-    try {
-      const { subject, summary, payload } = buildReportPayload();
-      const artifact = await publishToWalrus({
-        kind: reportKind,
-        subject,
-        summary,
-        payload,
-      });
-      setPublished(artifact);
-    } catch (e) {
-      setPublishErr(e instanceof Error ? e.message : "Publish failed");
-    } finally {
-      setPublishing(false);
-    }
-  };
-
-  const copyLink = () => {
-    if (!published) return;
-    navigator.clipboard.writeText(proofUrl(published.blobId));
-    setLinkCopied(true);
-    setTimeout(() => setLinkCopied(false), 1500);
-  };
-
-
   const exportCSV = () => {
     if (!protocols) return;
     const header = "name,slug,category,chain,tvl,change1d,change7d";
@@ -120,12 +51,12 @@ function ToolsPage() {
         .map((v) => `"${String(v).replace(/"/g, '""')}"`)
         .join(","),
     );
-      download("defihawk-protocols.csv", [header, ...rows].join("\n"), "text/csv");
+    download("hawq-protocols.csv", [header, ...rows].join("\n"), "text/csv");
   };
 
   const exportJSON = () => {
     if (!protocols) return;
-      download("defihawk-protocols.json", JSON.stringify(protocols, null, 2), "application/json");
+    download("hawq-protocols.json", JSON.stringify(protocols, null, 2), "application/json");
   };
 
   if (isLoading) {
@@ -207,98 +138,6 @@ function ToolsPage() {
           </div>
         </GlassCard>
       </div>
-
-      <GlassCard className="p-5">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-primary" />
-            <h2 className="font-display text-lg font-semibold">Publish to Walrus</h2>
-          </div>
-          <Link to="/track-record" className="text-xs text-primary hover:underline">
-            View track record →
-          </Link>
-        </div>
-        <p className="mb-4 text-sm text-muted-foreground">
-          Serialize a wallet / whale / token report, store it permanently on
-          Walrus, and anchor its hash on Sui — producing a shareable, tamper-proof
-          proof link.
-        </p>
-
-        <div className="flex flex-wrap items-end gap-3">
-          <div>
-            <label className="mb-1 block text-xs text-muted-foreground">Report type</label>
-            <select
-              value={reportKind}
-              onChange={(e) => setReportKind(e.target.value as WalrusArtifactKind)}
-              className="rounded-xl border border-border bg-secondary/40 px-3 py-2 text-sm outline-none"
-            >
-              <option value="token-report">Token Report</option>
-              <option value="wallet-report">Wallet Report</option>
-              <option value="whale-report">Whale Report</option>
-              <option value="signal">Trading Signal</option>
-            </select>
-          </div>
-          <div className="flex-1 min-w-[180px]">
-            <label className="mb-1 block text-xs text-muted-foreground">Subject</label>
-            <input
-              value={reportSubject}
-              onChange={(e) => setReportSubject(e.target.value)}
-              placeholder="e.g. Aave whale flows — June"
-              className="w-full rounded-xl border border-border bg-secondary/40 px-3 py-2 text-sm outline-none focus:border-primary/50"
-            />
-          </div>
-          <button
-            onClick={handlePublish}
-            disabled={publishing}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary/20 px-4 py-2.5 text-sm font-medium text-foreground ring-1 ring-primary/40 transition-colors hover:bg-primary/30 disabled:opacity-50"
-          >
-            {publishing ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <ShieldCheck className="h-4 w-4" />
-            )}
-            {publishing ? "Anchoring…" : "Publish & Anchor"}
-          </button>
-        </div>
-
-        {publishErr && (
-          <p className="mt-3 text-sm text-destructive">{publishErr}</p>
-        )}
-
-        {published && (
-          <div className="mt-4 space-y-3 rounded-xl bg-secondary/30 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <WalrusBadge anchored={published.anchored} />
-              <Link
-                to="/proof/$blobId"
-                params={{ blobId: published.blobId }}
-                className="text-xs text-primary hover:underline"
-              >
-                Open proof →
-              </Link>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                readOnly
-                value={proofUrl(published.blobId)}
-                className="flex-1 rounded-lg border border-border bg-background/40 px-3 py-2 font-mono text-xs outline-none"
-              />
-              <button
-                onClick={copyLink}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-primary/20 px-3 py-2 text-xs font-medium ring-1 ring-primary/40 hover:bg-primary/30"
-              >
-                {linkCopied ? (
-                  <Check className="h-3.5 w-3.5" />
-                ) : (
-                  <Copy className="h-3.5 w-3.5" />
-                )}
-                {linkCopied ? "Copied" : "Copy link"}
-              </button>
-            </div>
-          </div>
-        )}
-      </GlassCard>
     </div>
   );
-
 }

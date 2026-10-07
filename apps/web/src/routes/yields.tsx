@@ -1,17 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { GlassCard } from '../components/GlassCard';
-import { Skeleton } from '../components/Skeleton';
-import { useProtocols } from '../hooks/useDefiData';
-import { formatUSD } from '../lib/format';
-import { cn } from '../lib/utils';
+import { GlassCard } from "@/components/GlassCard";
+import { Skeleton } from "@/components/Skeleton";
+import { useProtocols } from "@/hooks/useDefiData";
+import { formatUSD } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { Sprout, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 export const Route = createFileRoute("/yields")({
   head: () => ({
     meta: [
-      { title: "Yields — DeFi-Wolf" },
-      { name: "description", content: "Pool APYs and yield opportunities derived from indexed DeFi protocols." },
+      { title: "Yields — HawQ" },
+      {
+        name: "description",
+        content:
+          "Pool APYs and yield opportunities derived from indexed DeFi protocols.",
+      },
+      { property: "og:title", content: "Yields — HawQ" },
+      {
+        property: "og:description",
+        content:
+          "Pool APYs and yield opportunities derived from indexed DeFi protocols.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: YieldsPage,
@@ -38,9 +50,20 @@ type Pool = {
   risk: "Low" | "Medium" | "High";
 };
 
-const SYMBOLS = ["USDC", "ETH-USDC", "stETH", "DAI", "WBTC-ETH", "USDT", "GHO", "rETH"];
+const SYMBOLS = [
+  "USDC",
+  "ETH-USDC",
+  "stETH",
+  "DAI",
+  "WBTC-ETH",
+  "USDT",
+  "GHO",
+  "rETH",
+];
 
-function buildPools(protocols: { name: string; slug: string; chain: string; tvl: number }[]): Pool[] {
+function buildPools(
+  protocols: { name: string; slug: string; chain: string; tvl: number }[],
+): Pool[] {
   return protocols.slice(0, 40).map((p) => {
     const r = seeded(p.slug);
     const apy = 1.5 + r * 22;
@@ -65,7 +88,7 @@ const riskColor: Record<Pool["risk"], string> = {
   High: "bg-destructive/15 text-destructive",
 };
 
-function YieldsPage() {
+export default function YieldsPage() {
   const { data: protocols, isLoading } = useProtocols();
   const [query, setQuery] = useState("");
   const [risk, setRisk] = useState<"All" | Pool["risk"]>("All");
@@ -76,7 +99,9 @@ function YieldsPage() {
       .filter((p) => (risk === "All" ? true : p.risk === risk))
       .filter((p) =>
         query.trim()
-          ? (p.protocol + p.symbol + p.chain).toLowerCase().includes(query.toLowerCase())
+          ? (p.protocol + p.symbol + p.chain)
+              .toLowerCase()
+              .includes(query.toLowerCase())
           : true,
       )
       .sort((a, b) => b.apy - a.apy);
@@ -98,7 +123,8 @@ function YieldsPage() {
           <span className="text-gradient">Yields</span>
         </h1>
         <p className="text-sm text-muted-foreground">
-          Live pool APYs and yield opportunities across {pools.length} indexed pools.
+          Live pool APYs and yield opportunities across {pools.length} indexed
+          pools.
         </p>
       </header>
 
@@ -119,7 +145,9 @@ function YieldsPage() {
               onClick={() => setRisk(r)}
               className={cn(
                 "rounded-lg px-3 py-1.5 text-xs font-medium transition-all",
-                risk === r ? "bg-primary/20 text-foreground ring-1 ring-primary/40" : "text-muted-foreground hover:text-foreground",
+                risk === r
+                  ? "bg-primary/20 text-foreground ring-1 ring-primary/40"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {r}
@@ -143,22 +171,38 @@ function YieldsPage() {
             </thead>
             <tbody>
               {pools.map((p) => (
-                <tr key={p.slug} className="border-b border-border/50 transition-colors hover:bg-secondary/30">
+                <tr
+                  key={p.slug}
+                  className="border-b border-border/50 transition-colors hover:bg-secondary/30"
+                >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <Sprout className="h-4 w-4 text-primary" />
                       <div>
                         <p className="font-medium">{p.symbol}</p>
-                        <p className="text-xs text-muted-foreground">{p.protocol}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {p.protocol}
+                        </p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 capitalize text-muted-foreground">{p.chain}</td>
+                  <td className="px-4 py-3 capitalize text-muted-foreground">
+                    {p.chain}
+                  </td>
                   <td className="px-4 py-3 text-right">{formatUSD(p.tvl)}</td>
-                  <td className="px-4 py-3 text-right text-muted-foreground">{p.apyBase.toFixed(2)}%</td>
-                  <td className="px-4 py-3 text-right font-semibold text-success">{p.apy.toFixed(2)}%</td>
+                  <td className="px-4 py-3 text-right text-muted-foreground">
+                    {p.apyBase.toFixed(2)}%
+                  </td>
+                  <td className="px-4 py-3 text-right font-semibold text-success">
+                    {p.apy.toFixed(2)}%
+                  </td>
                   <td className="px-4 py-3 text-right">
-                    <span className={cn("rounded-md px-2 py-0.5 text-xs font-semibold", riskColor[p.risk])}>
+                    <span
+                      className={cn(
+                        "rounded-md px-2 py-0.5 text-xs font-semibold",
+                        riskColor[p.risk],
+                      )}
+                    >
                       {p.risk}
                     </span>
                   </td>

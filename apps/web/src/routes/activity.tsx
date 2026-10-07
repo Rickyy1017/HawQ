@@ -1,19 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Radio } from "lucide-react";
-import { GlassCard } from '../components/GlassCard';
-import { Skeleton } from '../components/Skeleton';
-import { ActivityFeed } from '../components/ActivityFeed';
-import { useActivityFeed } from '../hooks/useDefiData';
+import { GlassCard } from "@/components/GlassCard";
+import { Skeleton } from "@/components/Skeleton";
+import { ActivityFeed } from "@/components/ActivityFeed";
+import { useActivityFeed } from "@/hooks/useDefiData";
 
 export const Route = createFileRoute("/activity")({
   head: () => ({
     meta: [
-      { title: "Activity Feed — DeFi-Wolf" },
+      { title: "Activity Feed — HawQ" },
       {
         name: "description",
         content:
           "Live feed of protocol and wallet events across chains — deposits, withdrawals, swaps and whale moves with timestamps and filters.",
       },
+      { property: "og:title", content: "Activity Feed — HawQ" },
+      {
+        property: "og:description",
+        content:
+          "Live feed of protocol and wallet events across chains — deposits, withdrawals, swaps and whale moves with timestamps and filters.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ActivityPage,
@@ -32,7 +40,8 @@ function ActivityPage() {
           </span>
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Recent protocol and wallet events with timestamps. Filter by chain and event type.
+          Recent protocol and wallet events with timestamps. Filter by chain and
+          event type.
         </p>
       </div>
 

@@ -1,22 +1,28 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { fetchDefiLlamaTVL, fetchDefiLlamaChartAll, fetchDefiLlamaProtocol } from '../lib/api/defiLlama';
-import { fetchCoinGeckoPrices } from '../lib/api/coinGecko';
-import { fetchChainActivity, fetchStablecoinSignals } from '../lib/api/chain';
-import { normalizeProtocols, computeChainDistribution } from '../lib/normalizer/tvlNormalizer';
-import { generateProtocolEvents, computeWalletBalance } from '../lib/analytics/evens';
-import { MOCK_PROTOCOLS, buildMockHistory } from '../lib/mock/data';
-import type { ProtocolTVL, ProtocolEvent, WalletBalance } from '../types';
+import { fetchDefiLlamaProtocol } from "../lib/api/defiLlama";
+import { fetchCoinGeckoPrices } from "../lib/api/coinGecko";
+import { fetchChainlinkPrices } from "../lib/api/chainlink.functions";
+import { fetchChainActivity, fetchStablecoinSignals } from "../lib/api/chain";
+import { getProtocols, getChainDistribution, getTotalTvlHistory } from "../lib/api/hawq";
+import { generateProtocolEvents, computeWalletBalance } from "../lib/analytics/events";
+import { MOCK_PROTOCOLS, buildMockHistory } from "../lib/mock/data";
+import type { ProtocolTVL, ProtocolEvent, WalletBalance } from "../types";
 
 const QO = { staleTime: 5 * 60_000, gcTime: 30 * 60_000, retry: 1 } as const;
 
+/** Protocol list — sourced from our own backend (Postgres, fed by scheduled ingestion), not DefiLlama directly. */
 export function useProtocols() {
   return useQuery({
     queryKey: ["protocols"],
     queryFn: async (): Promise<ProtocolTVL[]> => {
       try {
-        const raw = await fetchDefiLlamaTVL();
-        return normalizeProtocols(raw);
+        const rows = await getProtocols();
+        return rows.map((p) => ({
+          name: p.name, slug: p.slug, chain: p.chain, chains: p.chains,
+          tvl: p.tvl, change1d: p.change1d ?? undefined, change7d: p.change7d ?? undefined,
+          category: p.category ?? undefined, logo: p.logo ?? undefined, mcap: p.mcap ?? undefined,
+        }));
       } catch {
         return MOCK_PROTOCOLS;
       }
@@ -25,30 +31,52 @@ export function useProtocols() {
   });
 }
 
+/** Chain TVL share — computed and stored server-side in our own database. */
 export function useChainDistribution() {
-  const q = useProtocols();
-  return { ...q, data: q.data ? computeChainDistribution(q.data) : undefined };
+  return useQuery({
+    queryKey: ["chain-distribution"],
+    queryFn: async () => {
+      try { return await getChainDistribution(); } catch { return []; }
+    },
+    ...QO,
+  });
 }
 
 export function usePrices() {
-  return useQuery({ queryKey: ["prices"], queryFn: fetchCoinGeckoPrices, ...QO, staleTime: 60_000 });
+  return useQuery({ queryKey: ["prices"], queryFn: async () => {
+    const fallback = await fetchCoinGeckoPrices();
+    try {
+      const oracle = await fetchChainlinkPrices();
+      return fallback.map((f) => {
+        const p = oracle.find((candidate) => candidate.symbol === f.symbol);
+        return p ? { ...p, change24h: f.change24h } : f;
+      });
+    } catch { return fallback; }
+  }, ...QO, staleTime: 10_000, refetchInterval: 15_000, refetchOnWindowFocus: true });
 }
 
+/**
+ * Simulated, not live — Etherscan/BSCScan-style per-chain tx feeds need paid
+ * API keys we don't have yet. Kept as a clearly-scoped placeholder rather
+ * than wired to a real indexer under false pretenses.
+ */
 export function useChainActivity() {
   return useQuery({ queryKey: ["activity"], queryFn: fetchChainActivity, ...QO });
 }
 
+/** Simulated NGN/USDT spread + USDT dominance — see useChainActivity's note above. */
 export function useStablecoinSignals() {
   return useQuery({ queryKey: ["stablecoin"], queryFn: fetchStablecoinSignals, ...QO });
 }
 
+/** Total market TVL history — sourced from our own backend. */
 export function useTotalTVLHistory() {
   return useQuery({
     queryKey: ["tvl-history"],
     queryFn: async () => {
       try {
-        const raw = await fetchDefiLlamaChartAll();
-        return raw.slice(-180).map((d) => ({ date: Number(d.date), tvl: d.tvl }));
+        const rows = await getTotalTvlHistory();
+        return rows.length ? rows : buildMockHistory(80_000_000_000);
       } catch {
         return buildMockHistory(80_000_000_000);
       }
@@ -68,7 +96,7 @@ export function useProtocolDetail(slug: string) {
         const m = MOCK_PROTOCOLS.find((p) => p.slug === slug) ?? MOCK_PROTOCOLS[0];
         return {
           name: m.name,
-          description: "Live data unavailable â€” showing cached analytics snapshot.",
+          description: "Live data unavailable — showing cached analytics snapshot.",
           chains: m.chains,
           category: m.category,
           currentChainTvls: Object.fromEntries(m.chains.map((c) => [c, m.tvl / m.chains.length])),
@@ -80,7 +108,6 @@ export function useProtocolDetail(slug: string) {
   });
 }
 
-/** A ticking counter that increments on an interval (for "live" updates). */
 export function useLiveTick(intervalMs = 12_000) {
   const [tick, setTick] = useState(0);
   useEffect(() => {
@@ -90,7 +117,6 @@ export function useLiveTick(intervalMs = 12_000) {
   return tick;
 }
 
-/** Real-time-feeling activity feed derived from live protocol TVL data. */
 export function useActivityFeed(count = 60): { events: ProtocolEvent[]; isLoading: boolean } {
   const { data: protocols, isLoading } = useProtocols();
   const tick = useLiveTick(12_000);
@@ -101,7 +127,6 @@ export function useActivityFeed(count = 60): { events: ProtocolEvent[]; isLoadin
   return { events, isLoading };
 }
 
-/** Live balances + recent activity for a set of watched addresses. */
 export function useWatchlistBalances(addresses: string[]): {
   balances: WalletBalance[];
   isLoading: boolean;
@@ -109,8 +134,7 @@ export function useWatchlistBalances(addresses: string[]): {
   const { data: protocols, isLoading } = useProtocols();
   const tick = useLiveTick(8_000);
   const balances = useMemo(
-    () =>
-      addresses.map((a) => computeWalletBalance(a, protocols ?? MOCK_PROTOCOLS, tick)),
+    () => addresses.map((a) => computeWalletBalance(a, protocols ?? MOCK_PROTOCOLS, tick)),
     [addresses, protocols, tick],
   );
   return { balances, isLoading };

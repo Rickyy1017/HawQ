@@ -1,11 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowDownLeft, ArrowUpRight, Repeat, Zap, Fish, Loader2 } from "lucide-react";
-import { cn } from '../lib/utils';
-import { formatUSD, timeAgo, shortenAddress } from '../lib/format';
-import { EVENT_META, EVENT_TYPES } from '../lib/analytics/evens';
-import type { EventType, ProtocolEvent } from '../types';
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  Repeat,
+  Zap,
+  Fish,
+  Loader2,
+} from "lucide-react";
+import { cn } from "../lib/utils";
+import { formatUSD, timeAgo, shortenAddress } from "../lib/format";
+import { EVENT_META, EVENT_TYPES } from "../lib/analytics/evens";
+import type { EventType, ProtocolEvent } from "../types";
 
 const ICONS: Record<EventType, typeof Repeat> = {
   deposit: ArrowDownLeft,
@@ -79,7 +86,8 @@ export function ActivityFeed({
 
   // Fixed limit (embedded preview) skips pagination entirely.
   const paginated = limit !== undefined;
-  const filtered = limit !== undefined ? matched.slice(0, limit) : matched.slice(0, visible);
+  const filtered =
+    limit !== undefined ? matched.slice(0, limit) : matched.slice(0, visible);
   const hasMore = limit === undefined && visible < matched.length;
 
   // Infinite scroll via IntersectionObserver.
@@ -104,20 +112,32 @@ export function ActivityFeed({
       {showFilters && (
         <div className="space-y-2.5">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs uppercase tracking-wider text-muted-foreground">Chain</span>
+            <span className="text-xs uppercase tracking-wider text-muted-foreground">
+              Chain
+            </span>
             {chains.map((c) => (
-              <FilterPill key={c} active={chain === c} onClick={() => setChain(c)}>
+              <FilterPill
+                key={c}
+                active={chain === c}
+                onClick={() => setChain(c)}
+              >
                 {c}
               </FilterPill>
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs uppercase tracking-wider text-muted-foreground">Type</span>
+            <span className="text-xs uppercase tracking-wider text-muted-foreground">
+              Type
+            </span>
             <FilterPill active={type === "All"} onClick={() => setType("All")}>
               All
             </FilterPill>
             {EVENT_TYPES.map((t) => (
-              <FilterPill key={t} active={type === t} onClick={() => setType(t)}>
+              <FilterPill
+                key={t}
+                active={type === t}
+                onClick={() => setType(t)}
+              >
                 {EVENT_META[t].label}
               </FilterPill>
             ))}
@@ -167,7 +187,9 @@ export function ActivityFeed({
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="text-sm font-semibold">{formatUSD(e.amountUSD)}</p>
+                  <p className="text-sm font-semibold">
+                    {formatUSD(e.amountUSD)}
+                  </p>
                   <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
                     {meta.label}
                   </span>
@@ -186,10 +208,15 @@ export function ActivityFeed({
       {paginated ? null : (
         <div className="pt-1">
           {hasMore ? (
-            <div ref={sentinelRef} className="flex flex-col items-center gap-2 py-4">
+            <div
+              ref={sentinelRef}
+              className="flex flex-col items-center gap-2 py-4"
+            >
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               <button
-                onClick={() => setVisible((v) => Math.min(v + PAGE_SIZE, matched.length))}
+                onClick={() =>
+                  setVisible((v) => Math.min(v + PAGE_SIZE, matched.length))
+                }
                 className="rounded-full bg-secondary/50 px-4 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary/80 hover:text-foreground"
               >
                 Load older events

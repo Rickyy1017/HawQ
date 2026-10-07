@@ -1,25 +1,33 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Plus, X, GitCompareArrows, Search } from "lucide-react";
-import { GlassCard } from '../components/GlassCard';
-import { Skeleton } from '../components/Skeleton';
-import { TVLAreaChart } from '../components/charts/TVLAreaChart';
-import { Sparkline } from '../components/charts/Sparkline';
-import { useProtocols, useProtocolDetail } from '../hooks/useDefiData';
-import { getTopProtocolsByTVL } from '../lib/analytics/insights';
-import { formatUSD, formatPct } from '../lib/format';
-import { cn } from '../lib/utils';
-import type { ProtocolTVL } from '../types';
+import { GlassCard } from "@/components/GlassCard";
+import { Skeleton } from "@/components/Skeleton";
+import { TVLAreaChart } from "@/components/charts/TVLAreaChart";
+import { Sparkline } from "@/components/charts/Sparkline";
+import { useProtocols, useProtocolDetail } from "@/hooks/useDefiData";
+import { getTopProtocolsByTVL } from "@/lib/analytics/insights";
+import { formatUSD, formatPct } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import type { ProtocolTVL } from "@/types";
 
 export const Route = createFileRoute("/compare")({
   head: () => ({
     meta: [
-      { title: "Compare Protocols — DeFi Hawk" },
+      { title: "Compare Protocols — HawQ" },
       {
         name: "description",
         content:
           "Select multiple DeFi protocols and compare TVL, chain distribution and recent changes side by side.",
       },
+      { property: "og:title", content: "Compare Protocols — HawQ" },
+      {
+        property: "og:description",
+        content:
+          "Select multiple DeFi protocols and compare TVL, chain distribution and recent changes side by side.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ComparePage,
@@ -45,7 +53,11 @@ function ComparePage() {
 
   const toggle = (slug: string) =>
     setSelected((s) =>
-      s.includes(slug) ? s.filter((x) => x !== slug) : s.length >= 4 ? s : [...s, slug],
+      s.includes(slug)
+        ? s.filter((x) => x !== slug)
+        : s.length >= 4
+          ? s
+          : [...s, slug],
     );
 
   return (
@@ -56,7 +68,8 @@ function ComparePage() {
           <span className="text-gradient">Compare Protocols</span>
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Pick up to 4 protocols to compare TVL, chain distribution and recent changes side by side.
+          Pick up to 4 protocols to compare TVL, chain distribution and recent
+          changes side by side.
         </p>
       </div>
 
@@ -90,7 +103,11 @@ function ComparePage() {
                     disabled && "cursor-not-allowed opacity-40",
                   )}
                 >
-                  {on ? <X className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+                  {on ? (
+                    <X className="h-3 w-3" />
+                  ) : (
+                    <Plus className="h-3 w-3" />
+                  )}
                   {p.name}
                 </button>
               );
@@ -104,7 +121,9 @@ function ComparePage() {
           <div className="rounded-2xl bg-primary/15 p-5 text-primary ring-1 ring-primary/20">
             <GitCompareArrows className="h-8 w-8" />
           </div>
-          <p className="font-display text-lg font-semibold">Nothing selected yet</p>
+          <p className="font-display text-lg font-semibold">
+            Nothing selected yet
+          </p>
           <p className="max-w-md text-sm text-muted-foreground">
             Choose protocols above to build a side-by-side comparison.
           </p>
@@ -119,7 +138,12 @@ function ComparePage() {
           )}
         >
           {selectedProtocols.map((p, i) => (
-            <CompareCard key={p.slug} protocol={p} onRemove={() => toggle(p.slug)} delay={i * 0.05} />
+            <CompareCard
+              key={p.slug}
+              protocol={p}
+              onRemove={() => toggle(p.slug)}
+              delay={i * 0.05}
+            />
           ))}
         </div>
       )}
@@ -138,8 +162,13 @@ function CompareCard({
 }) {
   const { data, isLoading } = useProtocolDetail(protocol.slug);
 
-  const history = (data?.tvl ?? []).map((t) => ({ date: t.date, tvl: t.totalLiquidityUSD }));
-  const current = history.length ? history[history.length - 1].tvl : protocol.tvl;
+  const history = (data?.tvl ?? []).map((t) => ({
+    date: t.date,
+    tvl: t.totalLiquidityUSD,
+  }));
+  const current = history.length
+    ? history[history.length - 1].tvl
+    : protocol.tvl;
   const spark24h = history.slice(-2);
   const spark7d = history.slice(-8);
   const totalChainTvl = data?.currentChainTvls
@@ -158,7 +187,11 @@ function CompareCard({
     <GlassCard className="p-5" delay={delay}>
       <div className="mb-4 flex items-center gap-3">
         {protocol.logo ? (
-          <img src={protocol.logo} alt="" className="h-9 w-9 rounded-full ring-1 ring-border" />
+          <img
+            src={protocol.logo}
+            alt=""
+            className="h-9 w-9 rounded-full ring-1 ring-border"
+          />
         ) : (
           <span className="grid h-9 w-9 place-items-center rounded-full bg-primary/15 text-xs text-primary">
             {protocol.name.slice(0, 2)}
@@ -166,7 +199,9 @@ function CompareCard({
         )}
         <div className="min-w-0 flex-1">
           <p className="truncate font-display font-semibold">{protocol.name}</p>
-          <p className="text-xs text-muted-foreground">{protocol.category ?? "DeFi"}</p>
+          <p className="text-xs text-muted-foreground">
+            {protocol.category ?? "DeFi"}
+          </p>
         </div>
         <button
           onClick={onRemove}
@@ -178,40 +213,74 @@ function CompareCard({
 
       <div className="mb-4 grid grid-cols-3 gap-2 text-center">
         <div className="rounded-xl bg-secondary/30 p-2.5">
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">TVL</p>
-          <p className="font-display text-sm font-semibold">{formatUSD(current)}</p>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            TVL
+          </p>
+          <p className="font-display text-sm font-semibold">
+            {formatUSD(current)}
+          </p>
         </div>
         <div className="rounded-xl bg-secondary/30 p-2.5">
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">1d</p>
-          <p className={cn("text-sm font-semibold", (protocol.change1d ?? 0) >= 0 ? "text-success" : "text-destructive")}>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            1d
+          </p>
+          <p
+            className={cn(
+              "text-sm font-semibold",
+              (protocol.change1d ?? 0) >= 0
+                ? "text-success"
+                : "text-destructive",
+            )}
+          >
             {formatPct(protocol.change1d)}
           </p>
           <div className="mt-1.5 h-7">
             {isLoading ? (
               <Skeleton className="h-full w-full" />
             ) : (
-              <Sparkline data={spark24h} positive={(protocol.change1d ?? 0) >= 0} />
+              <Sparkline
+                data={spark24h}
+                positive={(protocol.change1d ?? 0) >= 0}
+              />
             )}
           </div>
         </div>
         <div className="rounded-xl bg-secondary/30 p-2.5">
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">7d</p>
-          <p className={cn("text-sm font-semibold", (protocol.change7d ?? 0) >= 0 ? "text-success" : "text-destructive")}>
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            7d
+          </p>
+          <p
+            className={cn(
+              "text-sm font-semibold",
+              (protocol.change7d ?? 0) >= 0
+                ? "text-success"
+                : "text-destructive",
+            )}
+          >
             {formatPct(protocol.change7d)}
           </p>
           <div className="mt-1.5 h-7">
             {isLoading ? (
               <Skeleton className="h-full w-full" />
             ) : (
-              <Sparkline data={spark7d} positive={(protocol.change7d ?? 0) >= 0} />
+              <Sparkline
+                data={spark7d}
+                positive={(protocol.change7d ?? 0) >= 0}
+              />
             )}
           </div>
         </div>
       </div>
 
-      <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">TVL History</p>
+      <p className="mb-2 text-xs uppercase tracking-wider text-muted-foreground">
+        TVL History
+      </p>
       <div className="h-[180px]">
-        {isLoading ? <Skeleton className="h-full w-full" /> : <TVLAreaChart data={history} />}
+        {isLoading ? (
+          <Skeleton className="h-full w-full" />
+        ) : (
+          <TVLAreaChart data={history} />
+        )}
       </div>
 
       <p className="mb-2 mt-4 text-xs uppercase tracking-wider text-muted-foreground">
@@ -227,7 +296,9 @@ function CompareCard({
               <div key={chain}>
                 <div className="mb-1 flex justify-between text-xs">
                   <span>{chain}</span>
-                  <span className="text-muted-foreground">{pct.toFixed(0)}%</span>
+                  <span className="text-muted-foreground">
+                    {pct.toFixed(0)}%
+                  </span>
                 </div>
                 <div className="h-1.5 overflow-hidden rounded-full bg-secondary/50">
                   <div
@@ -239,7 +310,9 @@ function CompareCard({
             );
           })}
           {chainTvls.length === 0 && (
-            <p className="text-xs text-muted-foreground">No chain breakdown available.</p>
+            <p className="text-xs text-muted-foreground">
+              No chain breakdown available.
+            </p>
           )}
         </div>
       )}

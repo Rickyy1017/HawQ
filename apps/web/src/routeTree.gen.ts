@@ -9,107 +9,28 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as YieldsRouteImport } from './routes/yields'
-import { Route as WatchlistRouteImport } from './routes/watchlist'
-import { Route as TrackRecordRouteImport } from './routes/track-record'
-import { Route as ToolsRouteImport } from './routes/tools'
-import { Route as SupportRouteImport } from './routes/support'
-import { Route as SuiRouteImport } from './routes/sui'
-import { Route as StablecoinsRouteImport } from './routes/stablecoins'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as RwaRouteImport } from './routes/rwa'
-import { Route as ResearchRouteImport } from './routes/research'
-import { Route as MetricsRouteImport } from './routes/metrics'
-import { Route as InvestorsRouteImport } from './routes/investors'
-import { Route as DexRouteImport } from './routes/dex'
-import { Route as CompareRouteImport } from './routes/compare'
-import { Route as ChainsRouteImport } from './routes/chains'
-import { Route as ApiRouteImport } from './routes/api'
-import { Route as ActivityRouteImport } from './routes/activity'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ActivityRouteImport } from './routes/activity'
+import { Route as ChainsRouteImport } from './routes/chains'
+import { Route as CompareRouteImport } from './routes/compare'
+import { Route as MarketsRouteImport } from './routes/markets'
+import { Route as MetricsRouteImport } from './routes/metrics'
+import { Route as MyPositionsRouteImport } from './routes/my-positions'
+import { Route as PerpsRouteImport } from './routes/perps'
+import { Route as QuantRouteImport } from './routes/quant'
+import { Route as RwaRouteImport } from './routes/rwa'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SpotRouteImport } from './routes/spot'
+import { Route as StablecoinsRouteImport } from './routes/stablecoins'
+import { Route as SupportRouteImport } from './routes/support'
+import { Route as ToolsRouteImport } from './routes/tools'
+import { Route as WatchlistRouteImport } from './routes/watchlist'
+import { Route as YieldsRouteImport } from './routes/yields'
 import { Route as ProtocolSlugRouteImport } from './routes/protocol.$slug'
-import { Route as ProofBlobldRouteImport } from './routes/proof.$blobld'
-import { Route as ApiWalrusStoreRouteImport } from './routes/api/walrus/store'
-import { Route as ApiWalrusBlobldRouteImport } from './routes/api/walrus/$blobld'
 
-const YieldsRoute = YieldsRouteImport.update({
-  id: '/yields',
-  path: '/yields',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const WatchlistRoute = WatchlistRouteImport.update({
-  id: '/watchlist',
-  path: '/watchlist',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TrackRecordRoute = TrackRecordRouteImport.update({
-  id: '/track-record',
-  path: '/track-record',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ToolsRoute = ToolsRouteImport.update({
-  id: '/tools',
-  path: '/tools',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SupportRoute = SupportRouteImport.update({
-  id: '/support',
-  path: '/support',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SuiRoute = SuiRouteImport.update({
-  id: '/sui',
-  path: '/sui',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StablecoinsRoute = StablecoinsRouteImport.update({
-  id: '/stablecoins',
-  path: '/stablecoins',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RwaRoute = RwaRouteImport.update({
-  id: '/rwa',
-  path: '/rwa',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResearchRoute = ResearchRouteImport.update({
-  id: '/research',
-  path: '/research',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MetricsRoute = MetricsRouteImport.update({
-  id: '/metrics',
-  path: '/metrics',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InvestorsRoute = InvestorsRouteImport.update({
-  id: '/investors',
-  path: '/investors',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DexRoute = DexRouteImport.update({
-  id: '/dex',
-  path: '/dex',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CompareRoute = CompareRouteImport.update({
-  id: '/compare',
-  path: '/compare',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChainsRoute = ChainsRouteImport.update({
-  id: '/chains',
-  path: '/chains',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRoute = ApiRouteImport.update({
-  id: '/api',
-  path: '/api',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ActivityRoute = ActivityRouteImport.update({
@@ -117,9 +38,79 @@ const ActivityRoute = ActivityRouteImport.update({
   path: '/activity',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const ChainsRoute = ChainsRouteImport.update({
+  id: '/chains',
+  path: '/chains',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompareRoute = CompareRouteImport.update({
+  id: '/compare',
+  path: '/compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketsRoute = MarketsRouteImport.update({
+  id: '/markets',
+  path: '/markets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MetricsRoute = MetricsRouteImport.update({
+  id: '/metrics',
+  path: '/metrics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyPositionsRoute = MyPositionsRouteImport.update({
+  id: '/my-positions',
+  path: '/my-positions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PerpsRoute = PerpsRouteImport.update({
+  id: '/perps',
+  path: '/perps',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuantRoute = QuantRouteImport.update({
+  id: '/quant',
+  path: '/quant',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RwaRoute = RwaRouteImport.update({
+  id: '/rwa',
+  path: '/rwa',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpotRoute = SpotRouteImport.update({
+  id: '/spot',
+  path: '/spot',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StablecoinsRoute = StablecoinsRouteImport.update({
+  id: '/stablecoins',
+  path: '/stablecoins',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsRoute = ToolsRouteImport.update({
+  id: '/tools',
+  path: '/tools',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WatchlistRoute = WatchlistRouteImport.update({
+  id: '/watchlist',
+  path: '/watchlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const YieldsRoute = YieldsRouteImport.update({
+  id: '/yields',
+  path: '/yields',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProtocolSlugRoute = ProtocolSlugRouteImport.update({
@@ -127,305 +118,159 @@ const ProtocolSlugRoute = ProtocolSlugRouteImport.update({
   path: '/protocol/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProofBlobldRoute = ProofBlobldRouteImport.update({
-  id: '/proof/$blobld',
-  path: '/proof/$blobld',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiWalrusStoreRoute = ApiWalrusStoreRouteImport.update({
-  id: '/walrus/store',
-  path: '/walrus/store',
-  getParentRoute: () => ApiRoute,
-} as any)
-const ApiWalrusBlobldRoute = ApiWalrusBlobldRouteImport.update({
-  id: '/walrus/$blobld',
-  path: '/walrus/$blobld',
-  getParentRoute: () => ApiRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/activity': typeof ActivityRoute
-  '/api': typeof ApiRouteWithChildren
   '/chains': typeof ChainsRoute
   '/compare': typeof CompareRoute
-  '/dex': typeof DexRoute
-  '/investors': typeof InvestorsRoute
+  '/markets': typeof MarketsRoute
   '/metrics': typeof MetricsRoute
-  '/research': typeof ResearchRoute
+  '/my-positions': typeof MyPositionsRoute
+  '/perps': typeof PerpsRoute
+  '/quant': typeof QuantRoute
   '/rwa': typeof RwaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/spot': typeof SpotRoute
   '/stablecoins': typeof StablecoinsRoute
-  '/sui': typeof SuiRoute
   '/support': typeof SupportRoute
   '/tools': typeof ToolsRoute
-  '/track-record': typeof TrackRecordRoute
   '/watchlist': typeof WatchlistRoute
   '/yields': typeof YieldsRoute
-  '/proof/$blobld': typeof ProofBlobldRoute
   '/protocol/$slug': typeof ProtocolSlugRoute
-  '/api/walrus/$blobld': typeof ApiWalrusBlobldRoute
-  '/api/walrus/store': typeof ApiWalrusStoreRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/activity': typeof ActivityRoute
-  '/api': typeof ApiRouteWithChildren
   '/chains': typeof ChainsRoute
   '/compare': typeof CompareRoute
-  '/dex': typeof DexRoute
-  '/investors': typeof InvestorsRoute
+  '/markets': typeof MarketsRoute
   '/metrics': typeof MetricsRoute
-  '/research': typeof ResearchRoute
+  '/my-positions': typeof MyPositionsRoute
+  '/perps': typeof PerpsRoute
+  '/quant': typeof QuantRoute
   '/rwa': typeof RwaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/spot': typeof SpotRoute
   '/stablecoins': typeof StablecoinsRoute
-  '/sui': typeof SuiRoute
   '/support': typeof SupportRoute
   '/tools': typeof ToolsRoute
-  '/track-record': typeof TrackRecordRoute
   '/watchlist': typeof WatchlistRoute
   '/yields': typeof YieldsRoute
-  '/proof/$blobld': typeof ProofBlobldRoute
   '/protocol/$slug': typeof ProtocolSlugRoute
-  '/api/walrus/$blobld': typeof ApiWalrusBlobldRoute
-  '/api/walrus/store': typeof ApiWalrusStoreRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/activity': typeof ActivityRoute
-  '/api': typeof ApiRouteWithChildren
   '/chains': typeof ChainsRoute
   '/compare': typeof CompareRoute
-  '/dex': typeof DexRoute
-  '/investors': typeof InvestorsRoute
+  '/markets': typeof MarketsRoute
   '/metrics': typeof MetricsRoute
-  '/research': typeof ResearchRoute
+  '/my-positions': typeof MyPositionsRoute
+  '/perps': typeof PerpsRoute
+  '/quant': typeof QuantRoute
   '/rwa': typeof RwaRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/spot': typeof SpotRoute
   '/stablecoins': typeof StablecoinsRoute
-  '/sui': typeof SuiRoute
   '/support': typeof SupportRoute
   '/tools': typeof ToolsRoute
-  '/track-record': typeof TrackRecordRoute
   '/watchlist': typeof WatchlistRoute
   '/yields': typeof YieldsRoute
-  '/proof/$blobld': typeof ProofBlobldRoute
   '/protocol/$slug': typeof ProtocolSlugRoute
-  '/api/walrus/$blobld': typeof ApiWalrusBlobldRoute
-  '/api/walrus/store': typeof ApiWalrusStoreRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/activity'
-    | '/api'
     | '/chains'
     | '/compare'
-    | '/dex'
-    | '/investors'
+    | '/markets'
     | '/metrics'
-    | '/research'
+    | '/my-positions'
+    | '/perps'
+    | '/quant'
     | '/rwa'
     | '/sitemap.xml'
+    | '/spot'
     | '/stablecoins'
-    | '/sui'
     | '/support'
     | '/tools'
-    | '/track-record'
     | '/watchlist'
     | '/yields'
-    | '/proof/$blobld'
     | '/protocol/$slug'
-    | '/api/walrus/$blobld'
-    | '/api/walrus/store'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/activity'
-    | '/api'
     | '/chains'
     | '/compare'
-    | '/dex'
-    | '/investors'
+    | '/markets'
     | '/metrics'
-    | '/research'
+    | '/my-positions'
+    | '/perps'
+    | '/quant'
     | '/rwa'
     | '/sitemap.xml'
+    | '/spot'
     | '/stablecoins'
-    | '/sui'
     | '/support'
     | '/tools'
-    | '/track-record'
     | '/watchlist'
     | '/yields'
-    | '/proof/$blobld'
     | '/protocol/$slug'
-    | '/api/walrus/$blobld'
-    | '/api/walrus/store'
   id:
     | '__root__'
     | '/'
     | '/activity'
-    | '/api'
     | '/chains'
     | '/compare'
-    | '/dex'
-    | '/investors'
+    | '/markets'
     | '/metrics'
-    | '/research'
+    | '/my-positions'
+    | '/perps'
+    | '/quant'
     | '/rwa'
     | '/sitemap.xml'
+    | '/spot'
     | '/stablecoins'
-    | '/sui'
     | '/support'
     | '/tools'
-    | '/track-record'
     | '/watchlist'
     | '/yields'
-    | '/proof/$blobld'
     | '/protocol/$slug'
-    | '/api/walrus/$blobld'
-    | '/api/walrus/store'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ActivityRoute: typeof ActivityRoute
-  ApiRoute: typeof ApiRouteWithChildren
   ChainsRoute: typeof ChainsRoute
   CompareRoute: typeof CompareRoute
-  DexRoute: typeof DexRoute
-  InvestorsRoute: typeof InvestorsRoute
+  MarketsRoute: typeof MarketsRoute
   MetricsRoute: typeof MetricsRoute
-  ResearchRoute: typeof ResearchRoute
+  MyPositionsRoute: typeof MyPositionsRoute
+  PerpsRoute: typeof PerpsRoute
+  QuantRoute: typeof QuantRoute
   RwaRoute: typeof RwaRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  SpotRoute: typeof SpotRoute
   StablecoinsRoute: typeof StablecoinsRoute
-  SuiRoute: typeof SuiRoute
   SupportRoute: typeof SupportRoute
   ToolsRoute: typeof ToolsRoute
-  TrackRecordRoute: typeof TrackRecordRoute
   WatchlistRoute: typeof WatchlistRoute
   YieldsRoute: typeof YieldsRoute
-  ProofBlobldRoute: typeof ProofBlobldRoute
   ProtocolSlugRoute: typeof ProtocolSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/yields': {
-      id: '/yields'
-      path: '/yields'
-      fullPath: '/yields'
-      preLoaderRoute: typeof YieldsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/watchlist': {
-      id: '/watchlist'
-      path: '/watchlist'
-      fullPath: '/watchlist'
-      preLoaderRoute: typeof WatchlistRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/track-record': {
-      id: '/track-record'
-      path: '/track-record'
-      fullPath: '/track-record'
-      preLoaderRoute: typeof TrackRecordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tools': {
-      id: '/tools'
-      path: '/tools'
-      fullPath: '/tools'
-      preLoaderRoute: typeof ToolsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/support': {
-      id: '/support'
-      path: '/support'
-      fullPath: '/support'
-      preLoaderRoute: typeof SupportRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sui': {
-      id: '/sui'
-      path: '/sui'
-      fullPath: '/sui'
-      preLoaderRoute: typeof SuiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/stablecoins': {
-      id: '/stablecoins'
-      path: '/stablecoins'
-      fullPath: '/stablecoins'
-      preLoaderRoute: typeof StablecoinsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/rwa': {
-      id: '/rwa'
-      path: '/rwa'
-      fullPath: '/rwa'
-      preLoaderRoute: typeof RwaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/research': {
-      id: '/research'
-      path: '/research'
-      fullPath: '/research'
-      preLoaderRoute: typeof ResearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/metrics': {
-      id: '/metrics'
-      path: '/metrics'
-      fullPath: '/metrics'
-      preLoaderRoute: typeof MetricsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/investors': {
-      id: '/investors'
-      path: '/investors'
-      fullPath: '/investors'
-      preLoaderRoute: typeof InvestorsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dex': {
-      id: '/dex'
-      path: '/dex'
-      fullPath: '/dex'
-      preLoaderRoute: typeof DexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/compare': {
-      id: '/compare'
-      path: '/compare'
-      fullPath: '/compare'
-      preLoaderRoute: typeof CompareRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/chains': {
-      id: '/chains'
-      path: '/chains'
-      fullPath: '/chains'
-      preLoaderRoute: typeof ChainsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api': {
-      id: '/api'
-      path: '/api'
-      fullPath: '/api'
-      preLoaderRoute: typeof ApiRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/activity': {
@@ -435,11 +280,109 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ActivityRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/chains': {
+      id: '/chains'
+      path: '/chains'
+      fullPath: '/chains'
+      preLoaderRoute: typeof ChainsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compare': {
+      id: '/compare'
+      path: '/compare'
+      fullPath: '/compare'
+      preLoaderRoute: typeof CompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/markets': {
+      id: '/markets'
+      path: '/markets'
+      fullPath: '/markets'
+      preLoaderRoute: typeof MarketsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/metrics': {
+      id: '/metrics'
+      path: '/metrics'
+      fullPath: '/metrics'
+      preLoaderRoute: typeof MetricsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-positions': {
+      id: '/my-positions'
+      path: '/my-positions'
+      fullPath: '/my-positions'
+      preLoaderRoute: typeof MyPositionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/perps': {
+      id: '/perps'
+      path: '/perps'
+      fullPath: '/perps'
+      preLoaderRoute: typeof PerpsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quant': {
+      id: '/quant'
+      path: '/quant'
+      fullPath: '/quant'
+      preLoaderRoute: typeof QuantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rwa': {
+      id: '/rwa'
+      path: '/rwa'
+      fullPath: '/rwa'
+      preLoaderRoute: typeof RwaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/spot': {
+      id: '/spot'
+      path: '/spot'
+      fullPath: '/spot'
+      preLoaderRoute: typeof SpotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stablecoins': {
+      id: '/stablecoins'
+      path: '/stablecoins'
+      fullPath: '/stablecoins'
+      preLoaderRoute: typeof StablecoinsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools': {
+      id: '/tools'
+      path: '/tools'
+      fullPath: '/tools'
+      preLoaderRoute: typeof ToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/watchlist': {
+      id: '/watchlist'
+      path: '/watchlist'
+      fullPath: '/watchlist'
+      preLoaderRoute: typeof WatchlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/yields': {
+      id: '/yields'
+      path: '/yields'
+      fullPath: '/yields'
+      preLoaderRoute: typeof YieldsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/protocol/$slug': {
@@ -449,62 +392,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtocolSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/proof/$blobld': {
-      id: '/proof/$blobld'
-      path: '/proof/$blobld'
-      fullPath: '/proof/$blobld'
-      preLoaderRoute: typeof ProofBlobldRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/walrus/store': {
-      id: '/api/walrus/store'
-      path: '/walrus/store'
-      fullPath: '/api/walrus/store'
-      preLoaderRoute: typeof ApiWalrusStoreRouteImport
-      parentRoute: typeof ApiRoute
-    }
-    '/api/walrus/$blobld': {
-      id: '/api/walrus/$blobld'
-      path: '/walrus/$blobld'
-      fullPath: '/api/walrus/$blobld'
-      preLoaderRoute: typeof ApiWalrusBlobldRouteImport
-      parentRoute: typeof ApiRoute
-    }
   }
 }
-
-interface ApiRouteChildren {
-  ApiWalrusBlobldRoute: typeof ApiWalrusBlobldRoute
-  ApiWalrusStoreRoute: typeof ApiWalrusStoreRoute
-}
-
-const ApiRouteChildren: ApiRouteChildren = {
-  ApiWalrusBlobldRoute: ApiWalrusBlobldRoute,
-  ApiWalrusStoreRoute: ApiWalrusStoreRoute,
-}
-
-const ApiRouteWithChildren = ApiRoute._addFileChildren(ApiRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ActivityRoute: ActivityRoute,
-  ApiRoute: ApiRouteWithChildren,
   ChainsRoute: ChainsRoute,
   CompareRoute: CompareRoute,
-  DexRoute: DexRoute,
-  InvestorsRoute: InvestorsRoute,
+  MarketsRoute: MarketsRoute,
   MetricsRoute: MetricsRoute,
-  ResearchRoute: ResearchRoute,
+  MyPositionsRoute: MyPositionsRoute,
+  PerpsRoute: PerpsRoute,
+  QuantRoute: QuantRoute,
   RwaRoute: RwaRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  SpotRoute: SpotRoute,
   StablecoinsRoute: StablecoinsRoute,
-  SuiRoute: SuiRoute,
   SupportRoute: SupportRoute,
   ToolsRoute: ToolsRoute,
-  TrackRecordRoute: TrackRecordRoute,
   WatchlistRoute: WatchlistRoute,
   YieldsRoute: YieldsRoute,
-  ProofBlobldRoute: ProofBlobldRoute,
   ProtocolSlugRoute: ProtocolSlugRoute,
 }
 export const routeTree = rootRouteImport
