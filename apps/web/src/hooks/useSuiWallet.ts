@@ -131,7 +131,7 @@ export function useWalrusBlob(blobId?: string | null) {
     queryFn: async (): Promise<WalrusBlob> => ({
       blobId: blobId ?? "",
       type: "wallet_analysis",
-      platform: "DeFi Hawk",
+      platform: "HawQ",
       storedAt: Date.now(),
       summary: "Blob data loaded from demo storage.",
     }),

@@ -28,10 +28,9 @@ import {
   getTotalTVL,
   detectMarketSignal,
 } from "../lib/analytics/insights";
-import { formatUSD } from "../lib/format";
+import { formatPct, formatUSD } from "../lib/format";
 import { cn } from "../lib/utils";
 import { Button } from "../components/ui/button";
-
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -119,10 +118,13 @@ function Dashboard() {
 
   const filtered = useMemo(() => {
     if (!protocols.data) return [];
-    let list = getTopProtocolsByTVL(protocols.data, 250);
+    let list = protocols.data;
     if (chainFilter !== "All") {
-      list = list.filter((p) =>
-        (p.chains.length ? p.chains : [p.chain]).includes(chainFilter),
+      const selectedChain = chainFilter.trim().toLowerCase();
+      list = list.filter((protocol) =>
+        [protocol.chain, ...protocol.chains].some(
+          (chain) => chain.trim().toLowerCase() === selectedChain,
+        ),
       );
     }
     if (query.trim()) {
@@ -133,7 +135,7 @@ function Dashboard() {
           (p.category ?? "").toLowerCase().includes(q),
       );
     }
-    return list.slice(0, query.trim() ? 25 : 15);
+    return getTopProtocolsByTVL(list, query.trim() ? 25 : 15);
   }, [protocols.data, query, chainFilter]);
 
   const insights = useMemo(() => {
@@ -155,6 +157,13 @@ function Dashboard() {
   }, [protocols.data, chains.data, signals.data, activity.data, prices.data]);
 
   const stable = signals.data?.[signals.data.length - 1];
+  const pricesUpdatedAt = prices.dataUpdatedAt
+    ? new Date(prices.dataUpdatedAt).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      })
+    : null;
   const sentiment =
     insights.filter((i) => i.tone === "positive").length -
     insights.filter((i) => i.tone === "warning").length;
@@ -219,6 +228,62 @@ function Dashboard() {
           </>
         )}
       </div>
+
+      {(prices.isLoading || (prices.data?.length ?? 0) > 0) && (
+        <section
+          aria-label="Live market prices"
+          className="glass rounded-2xl border border-border/70 px-3 py-3 shadow-sm shadow-black/[0.02] sm:px-4"
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex shrink-0 items-center gap-2 px-1 sm:w-32">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success/60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+              </span>
+              <div>
+                <span className="block text-xs font-semibold">Live markets</span>
+                <span className="block text-[10px] text-muted-foreground">
+                  {pricesUpdatedAt
+                    ? `Updated ${pricesUpdatedAt}`
+                    : "Waiting for live prices"}
+                </span>
+              </div>
+            </div>
+            <div className="grid min-w-0 flex-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              {prices.isLoading
+                ? [0, 1, 2, 3].map((item) => (
+                    <Skeleton key={item} className="h-12 w-full rounded-xl" />
+                  ))
+                : prices.data?.map((price) => (
+                    <div
+                      key={price.symbol}
+                      className="flex min-w-0 items-center justify-between gap-2 rounded-xl border border-border/50 bg-background/60 px-3 py-2"
+                    >
+                      <img
+                        src={price.logo}
+                        alt={`${price.symbol} logo`}
+                        title={`${price.symbol} · ${price.source ?? "Live market"}`}
+                        className="h-7 w-7 shrink-0 rounded-full object-contain"
+                      />
+                      <span className="min-w-0 truncate text-right text-xs font-medium tabular-nums">
+                        {formatUSD(price.price, { compact: false })}
+                      </span>
+                      <span
+                        className={cn(
+                          "shrink-0 rounded-md px-1.5 py-1 text-[10px] font-medium tabular-nums",
+                          price.change24h >= 0
+                            ? "bg-success/10 text-success"
+                            : "bg-destructive/10 text-destructive",
+                        )}
+                      >
+                        {formatPct(price.change24h)}
+                      </span>
+                    </div>
+                  ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Market charts */}
       <GlassCard className="p-5" hover={false}>
@@ -293,13 +358,23 @@ function Dashboard() {
         </GlassCard>
       </div>
 
-      <GlassCard className="p-5" hover={false}>
-        <h2 className="mb-3 font-display text-base font-semibold">
-          Chain Dominance
-        </h2>
-        <div className="h-[240px]">
+      <GlassCard className="p-5 sm:p-6" hover={false}>
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h2 className="font-display text-base font-semibold">
+              Chain Dominance
+            </h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Share of tracked value across networks
+            </p>
+          </div>
+          <span className="rounded-full border border-border/70 bg-secondary/30 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
+            {chains.data?.length ?? 0} networks
+          </span>
+        </div>
+        <div>
           {chains.isLoading ? (
-            <Skeleton className="h-full w-full" />
+            <Skeleton className="h-[230px] w-full" />
           ) : (
             <ChainPieChart data={chains.data ?? []} />
           )}
@@ -353,11 +428,23 @@ function Dashboard() {
         ) : filtered.length ? (
           <ProtocolTable protocols={filtered} />
         ) : (
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            {chainFilter === "Robinhood Chain" || chainFilter === "Zcash"
-              ? `No tracked protocols on ${chainFilter} yet; chain TVL is sourced separately.`
-              : "No protocols found for this filter."}
-          </p>
+          <div className="flex flex-col items-center gap-3 py-10 text-center">
+            <p className="text-sm text-muted-foreground">
+              {chainFilter !== "All" && !query.trim()
+                ? `No tracked protocols on ${chainFilter} yet.`
+                : "No protocols match these filters."}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setChainFilter("All");
+                setQuery("");
+              }}
+            >
+              Clear filters
+            </Button>
+          </div>
         )}
       </GlassCard>
 

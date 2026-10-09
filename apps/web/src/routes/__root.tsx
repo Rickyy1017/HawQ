@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { AppShell } from "../components/AppShell";
+import { WalletProvider } from "../providers/WalletProvider";
 import { Toaster } from "../components/ui/sonner";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -83,14 +84,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       meta: [
         { charSet: "utf-8" },
         { name: "viewport", content: "width=device-width, initial-scale=1" },
-        { title: "HawQ — DeFi Intelligence" },
+        { title: "HawQ -- DeFi Intelligence" },
         {
           name: "description",
           content:
             "Multi-chain DeFi intelligence, protocol analytics and market signals.",
         },
         { name: "author", content: "Lovable" },
-        { property: "og:title", content: "HawQ — DeFi Intelligence" },
+        { property: "og:title", content: "HawQ -- DeFi Intelligence" },
         {
           property: "og:description",
           content:
@@ -100,6 +101,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { name: "twitter:card", content: "summary" },
       ],
       links: [
+        {
+          rel: "icon",
+          type: "image/svg+xml",
+          sizes: "any",
+          href: "/favicon-light.svg",
+        },
         { rel: "preconnect", href: "https://fonts.googleapis.com" },
         {
           rel: "preconnect",
@@ -142,7 +149,9 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AppShell />
+      <WalletProvider>
+        <AppShell />
+      </WalletProvider>
       <Toaster richColors position="bottom-right" />
     </QueryClientProvider>
   );

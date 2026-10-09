@@ -38,7 +38,7 @@ export function ConnectWallet() {
     <Button
       type="button"
       variant="outline"
-      size={address ? "default" : "icon"}
+      size="default"
       onClick={handleClick}
       aria-label={
         address ? `Copy connected wallet address ${address}` : "Connect wallet"
@@ -46,12 +46,10 @@ export function ConnectWallet() {
       title={
         address ? `Copy wallet address ${address}` : "Connect an EVM wallet"
       }
-      className="shrink-0 gap-2 sm:size-auto sm:px-3"
+      className="h-10 shrink-0 gap-2 rounded-xl border-border/80 bg-background/80 px-3 text-xs font-semibold shadow-sm"
     >
       {address ? <Check className="text-success" /> : <WalletCards />}
-      <span className="hidden sm:inline">
-        {shortAddress ?? "Connect wallet"}
-      </span>
+      <span>{shortAddress ?? "Connect wallet"}</span>
     </Button>
   );
 }

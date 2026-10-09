@@ -2,9 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { GlassCard } from "@/components/GlassCard";
 import { Skeleton } from "@/components/Skeleton";
 import { useProtocols } from "@/hooks/useDefiData";
+import { fetchCoinGeckoLogos } from "@/lib/api/coinGecko";
 import { formatUSD } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { Sprout, Search } from "lucide-react";
+import { Search, Sprout } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
 export const Route = createFileRoute("/yields")({
@@ -106,6 +108,17 @@ export default function YieldsPage() {
       )
       .sort((a, b) => b.apy - a.apy);
   }, [protocols, query, risk]);
+  const poolSymbols = [
+    ...new Set(pools.flatMap((pool) => pool.symbol.split("-"))),
+  ].sort();
+  const tokenLogos = useQuery({
+    queryKey: ["yield-token-logos", poolSymbols],
+    queryFn: () => fetchCoinGeckoLogos(poolSymbols),
+    enabled: poolSymbols.length > 0,
+    staleTime: 6 * 60 * 60_000,
+    gcTime: 24 * 60 * 60_000,
+    retry: 0,
+  });
 
   if (isLoading) {
     return (
@@ -177,7 +190,21 @@ export default function YieldsPage() {
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <Sprout className="h-4 w-4 text-primary" />
+                      {tokenLogos.data?.[
+                        p.symbol.split("-")[0].toUpperCase()
+                      ] ? (
+                        <img
+                          src={
+                            tokenLogos.data[
+                              p.symbol.split("-")[0].toUpperCase()
+                            ]
+                          }
+                          alt={`${p.symbol} logo`}
+                          className="h-5 w-5 rounded-full object-cover"
+                        />
+                      ) : (
+                        <Sprout className="h-4 w-4 text-primary" />
+                      )}
                       <div>
                         <p className="font-medium">{p.symbol}</p>
                         <p className="text-xs text-muted-foreground">

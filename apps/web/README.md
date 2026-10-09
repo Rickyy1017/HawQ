@@ -72,4 +72,4 @@ export default defineConfig([
 ]);
 ```
 
-# defi-hawk
+# HawQ

@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
+import { useTheme } from "./ThemeContext";
 import {
   LayoutDashboard,
   Activity,
@@ -81,12 +82,28 @@ export function Sidebar({
   mobile?: boolean;
 }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const { theme } = useTheme();
+  const logoSrc =
+    theme === "light"
+      ? "/hawq-logo-light-mode.svg"
+      : "/hawq-logo-white.svg";
+  const faviconSrc =
+    theme === "light" ? "/favicon-light.svg" : "/favicon-dark.svg";
   const activeGroup =
     GROUPS.find((g) => g.items.some((i) => i.to === path))?.label ?? null;
   const [open, setOpen] = useState<string | null>(activeGroup);
   useEffect(() => {
     setOpen(activeGroup);
   }, [activeGroup]);
+
+  useEffect(() => {
+    const favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if (favicon) {
+      favicon.href = faviconSrc;
+      favicon.type = "image/svg+xml";
+      favicon.setAttribute("sizes", "any");
+    }
+  }, [faviconSrc]);
 
   return (
     <aside
@@ -99,9 +116,11 @@ export function Sidebar({
       )}
     >
       <div className="flex items-center gap-2.5 px-4 py-5">
-        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-lg shadow-primary/30">
-          H
-        </div>
+        <img
+          src={logoSrc}
+          alt="HawQ logo"
+          className="h-11 w-11 shrink-0 object-contain"
+        />
         {!collapsed && (
           <div className="leading-tight">
             <p className="font-display text-sm font-bold">HawQ</p>

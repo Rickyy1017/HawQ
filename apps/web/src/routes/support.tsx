@@ -27,11 +27,11 @@ export const Route = createFileRoute("/support")({
 const FAQS = [
   {
     q: "Where does HawQ data come from?",
-    a: "TVL and protocol data is sourced from DeFiLlama. BTC, ETH and USDT prices use Chainlink Ethereum price feeds when available, then CoinGecko, with demo prices as a last fallback.",
+    a: "TVL and protocol data is sourced from DeFiLlama. BTC, ETH, SOL and USDT market prices and 24-hour changes come from CoinGecko; BTC, ETH and USDT spot prices use Chainlink when available.",
   },
   {
     q: "How often is the data refreshed?",
-    a: "Protocol TVL is cached and refreshed every 5 minutes, prices every 60 seconds. The Activity Feed and Watchlist update on a live tick for a real-time feel.",
+    a: "Protocol TVL is cached and refreshed every 5 minutes. Market prices refresh every 10 seconds while the dashboard is open.",
   },
   {
     q: "Are the yields and swap routes real?",

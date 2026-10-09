@@ -167,15 +167,7 @@
   }
 
   .text-gradient {
-    background: linear-gradient(
-      100deg,
-      oklch(0.85 0.08 300),
-      oklch(0.62 0.21 300) 60%,
-      oklch(0.7 0.18 330)
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: var(--foreground);
   }
 
   .glow-line {
@@ -374,17 +366,6 @@ html.theme-light {
 }
 html.theme-light .glass-strong {
   background-color: oklch(1 0 0 / 80%);
-}
-html.theme-light .text-gradient {
-  background: linear-gradient(
-    100deg,
-    oklch(0.5 0.18 300),
-    oklch(0.55 0.22 300) 60%,
-    oklch(0.6 0.2 330)
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
 }
 html.theme-light .mesh-bg {
   background: oklch(1 0 0);

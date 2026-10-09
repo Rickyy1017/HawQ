@@ -12,24 +12,25 @@ export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="flex items-center gap-1 rounded-xl border border-border bg-secondary/40 p-1">
+    <div className="flex shrink-0 items-center gap-0.5 rounded-xl border border-border/80 bg-background/70 p-1 shadow-sm shadow-black/[0.02]">
       {OPTIONS.map((opt) => {
         const active = theme === opt.value;
         return (
           <button
             key={opt.value}
             onClick={() => setTheme(opt.value)}
+            type="button"
             title={`${opt.label} theme`}
+            aria-label={`${opt.label} theme`}
             aria-pressed={active}
             className={cn(
-              "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all",
+              "grid h-7 w-7 place-items-center rounded-lg transition-all",
               active
-                ? "bg-primary/20 text-foreground ring-1 ring-primary/40"
-                : "text-muted-foreground hover:text-foreground",
+                ? "bg-primary/15 text-primary shadow-sm"
+                : "text-muted-foreground hover:bg-secondary/70 hover:text-foreground",
             )}
           >
             <opt.icon className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{opt.label}</span>
           </button>
         );
       })}

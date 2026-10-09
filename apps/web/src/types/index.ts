@@ -25,6 +25,7 @@ export type PricePoint = {
   symbol: string;
   price: number;
   change24h: number;
+  logo?: string;
   source?: "Chainlink" | "CoinGecko" | "Mock";
 };
 
