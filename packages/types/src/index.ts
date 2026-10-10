@@ -93,6 +93,8 @@ export const PredictionMarketSchema = z.object({
   id: z.string(),
   venue: z.literal("polymarket"),
   question: z.string(),
+  image: z.string().url().nullable().optional(),
+  icon: z.string().url().nullable().optional(),
   category: z.enum(PREDICTION_CATEGORIES),
   regionTag: z.string().nullable().optional(), // e.g. "nigeria"
   endDate: z.number().nullable().optional(),

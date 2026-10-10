@@ -22,7 +22,7 @@ export async function predictionsRoutes(app: FastifyInstance) {
     const { rows } = await pool.query(
       `
       SELECT DISTINCT ON (pm.id)
-        pm.id, pm.question, pm.category, pm.region_tag AS "regionTag", pm.end_date AS "endDate",
+        pm.id, pm.question, pm.image, pm.icon, pm.category, pm.region_tag AS "regionTag", pm.end_date AS "endDate",
         s.yes_price AS "yesPrice", s.no_price AS "noPrice", s.volume, s.liquidity, s.time
       FROM prediction_markets pm
       JOIN prediction_market_snapshots s ON s.market_id = pm.id

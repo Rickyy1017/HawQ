@@ -1,0 +1,3 @@
+ALTER TABLE prediction_markets
+  ADD COLUMN IF NOT EXISTS image TEXT,
+  ADD COLUMN IF NOT EXISTS icon TEXT;

@@ -145,12 +145,13 @@ export async function upsertPredictionMarkets(markets: PredictionMarket[]): Prom
     await client.query("BEGIN");
     for (const m of markets) {
       await client.query(
-        `INSERT INTO prediction_markets (id, venue, question, category, region_tag, end_date, updated_at)
-         VALUES ($1, $2, $3, $4, $5, to_timestamp($6 / 1000.0), $7)
+        `INSERT INTO prediction_markets (id, venue, question, category, region_tag, end_date, image, icon, updated_at)
+         VALUES ($1, $2, $3, $4, $5, to_timestamp($6 / 1000.0), $7, $8, $9)
          ON CONFLICT (id) DO UPDATE SET
            question = EXCLUDED.question, category = EXCLUDED.category,
-           region_tag = EXCLUDED.region_tag, end_date = EXCLUDED.end_date, updated_at = EXCLUDED.updated_at`,
-        [m.id, m.venue, m.question, m.category, m.regionTag ?? null, m.endDate ?? null, now],
+           region_tag = EXCLUDED.region_tag, end_date = EXCLUDED.end_date,
+           image = EXCLUDED.image, icon = EXCLUDED.icon, updated_at = EXCLUDED.updated_at`,
+        [m.id, m.venue, m.question, m.category, m.regionTag ?? null, m.endDate ?? null, m.image ?? null, m.icon ?? null, now],
       );
       await client.query(
         `INSERT INTO prediction_market_snapshots (time, market_id, yes_price, no_price, volume, liquidity)

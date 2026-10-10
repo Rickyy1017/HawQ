@@ -27,6 +27,8 @@ export type PerpMarket = z.infer<typeof perpMarketSchema>;
 export const predictionMarketSchema = z.object({
   id: z.string(),
   question: z.string(),
+  image: z.string().nullable().optional(),
+  icon: z.string().nullable().optional(),
   category: z.string(),
   regionTag: z.string().nullable().optional(),
   yesPrice: z.number(),

@@ -13,6 +13,8 @@ const GAMMA_URL = "https://gamma-api.polymarket.com/markets";
 type GammaMarket = {
   conditionId: string;
   question: string;
+  image?: string;
+  icon?: string;
   category?: string;
   endDate?: string;
   volume?: string;
@@ -63,6 +65,8 @@ export async function fetchPolymarketMarkets(limit = 200): Promise<PredictionMar
         id: m.conditionId,
         venue: "polymarket" as const,
         question: m.question,
+        image: m.image ?? null,
+        icon: m.icon ?? null,
         category: classify(m.question, m.tags),
         regionTag: regionTag(m.question, m.tags),
         endDate: m.endDate ? new Date(m.endDate).getTime() : null,
