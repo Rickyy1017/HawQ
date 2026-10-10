@@ -44,9 +44,18 @@ function regionTag(question: string, tags: string[] = []): string | null {
 }
 
 export async function fetchPolymarketMarkets(limit = 200): Promise<PredictionMarket[]> {
-  const raw = await safeFetch<GammaMarket[]>(
-    `${GAMMA_URL}?active=true&closed=false&limit=${limit}&order=volume&ascending=false`,
-  );
+  // Keep the full active feed refreshed. The API is paginated, and stopping
+  // after the first page leaves older stored markets with permanently-null art.
+  const raw: GammaMarket[] = [];
+  const maxPages = 5;
+  for (let page = 0; page < maxPages; page += 1) {
+    const offset = page * limit;
+    const batch = await safeFetch<GammaMarket[]>(
+      `${GAMMA_URL}?active=true&closed=false&limit=${limit}&offset=${offset}&order=volume&ascending=false`,
+    );
+    raw.push(...batch);
+    if (batch.length < limit) break;
+  }
 
   return raw
     .map((m): PredictionMarket | null => {

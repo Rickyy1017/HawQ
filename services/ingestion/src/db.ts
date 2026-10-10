@@ -150,7 +150,9 @@ export async function upsertPredictionMarkets(markets: PredictionMarket[]): Prom
          ON CONFLICT (id) DO UPDATE SET
            question = EXCLUDED.question, category = EXCLUDED.category,
            region_tag = EXCLUDED.region_tag, end_date = EXCLUDED.end_date,
-           image = EXCLUDED.image, icon = EXCLUDED.icon, updated_at = EXCLUDED.updated_at`,
+           image = COALESCE(EXCLUDED.image, prediction_markets.image),
+           icon = COALESCE(EXCLUDED.icon, prediction_markets.icon),
+           updated_at = EXCLUDED.updated_at`,
         [m.id, m.venue, m.question, m.category, m.regionTag ?? null, m.endDate ?? null, m.image ?? null, m.icon ?? null, now],
       );
       await client.query(
