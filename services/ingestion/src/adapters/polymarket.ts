@@ -43,21 +43,26 @@ function regionTag(question: string, tags: string[] = []): string | null {
   return NIGERIA_KEYWORDS.some((k) => text.includes(k)) ? "nigeria" : null;
 }
 
-export async function fetchPolymarketMarkets(limit = 200): Promise<PredictionMarket[]> {
+export async function fetchPolymarketMarkets(limit = 100): Promise<PredictionMarket[]> {
   // Keep the full active feed refreshed. The API is paginated, and stopping
   // after the first page leaves older stored markets with permanently-null art.
+  // Gamma returns at most 100 markets per page, even when asked for more.
   const raw: GammaMarket[] = [];
-  const maxPages = 5;
+  const pageSize = Math.min(limit, 100);
+  const maxPages = 10;
   for (let page = 0; page < maxPages; page += 1) {
-    const offset = page * limit;
+    const offset = page * pageSize;
     const batch = await safeFetch<GammaMarket[]>(
-      `${GAMMA_URL}?active=true&closed=false&limit=${limit}&offset=${offset}&order=volume&ascending=false`,
+      `${GAMMA_URL}?active=true&closed=false&limit=${pageSize}&offset=${offset}&order=volume&ascending=false`,
     );
     raw.push(...batch);
-    if (batch.length < limit) break;
+    if (batch.length < pageSize) break;
   }
 
-  return raw
+  // The active feed can shift while paging, so drop markets repeated across pages.
+  const uniqueMarkets = [...new Map(raw.map((market) => [market.conditionId, market])).values()];
+
+  return uniqueMarkets
     .map((m): PredictionMarket | null => {
       let yes = 0.5;
       let no = 0.5;
