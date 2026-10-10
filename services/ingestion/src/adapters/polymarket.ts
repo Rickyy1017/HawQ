@@ -15,6 +15,9 @@ type GammaMarket = {
   question: string;
   image?: string;
   icon?: string;
+  // Gamma also includes the parent event on market records. Event-level art
+  // is populated more consistently than the market-level fields.
+  events?: Array<{ image?: string; icon?: string }>;
   category?: string;
   endDate?: string;
   volume?: string;
@@ -61,12 +64,14 @@ export async function fetchPolymarketMarkets(limit = 200): Promise<PredictionMar
 
       if (!m.conditionId || !m.question) return null;
 
+      const parentEvent = m.events?.find((event) => event.image || event.icon);
+
       return {
         id: m.conditionId,
         venue: "polymarket" as const,
         question: m.question,
-        image: m.image ?? null,
-        icon: m.icon ?? null,
+        image: m.image || parentEvent?.image || null,
+        icon: m.icon || parentEvent?.icon || null,
         category: classify(m.question, m.tags),
         regionTag: regionTag(m.question, m.tags),
         endDate: m.endDate ? new Date(m.endDate).getTime() : null,
