@@ -7,7 +7,10 @@ export async function predictionsRoutes(app: FastifyInstance) {
   app.get("/markets", async (req) => {
     const { category, region } = req.query as { category?: string; region?: string };
 
-    const conditions: string[] = [];
+    // Older markets remain in the snapshot table after they leave Polymarket's
+    // active feed. Only return records with artwork so stale rows don't render
+    // as placeholder cards on the predictions page.
+    const conditions: string[] = ["(pm.image IS NOT NULL OR pm.icon IS NOT NULL)"];
     const params: unknown[] = [];
     if (category && (PREDICTION_CATEGORIES as readonly string[]).includes(category)) {
       params.push(category);
