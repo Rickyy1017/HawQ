@@ -4,7 +4,7 @@ import { useWalletConnection } from "../hooks/useWalletConnection";
 import { Button } from "./ui/button";
 
 export function ConnectWallet() {
-  const { address, connect } = useWalletConnection();
+  const { address, connect, isConnecting } = useWalletConnection();
 
   const handleClick = async () => {
     if (address) {
@@ -46,10 +46,13 @@ export function ConnectWallet() {
       title={
         address ? `Copy wallet address ${address}` : "Connect an EVM wallet"
       }
+      disabled={isConnecting}
       className="h-10 shrink-0 gap-2 rounded-xl border-border/80 bg-background/80 px-3 text-xs font-semibold shadow-sm"
     >
       {address ? <Check className="text-success" /> : <WalletCards />}
-      <span>{shortAddress ?? "Connect wallet"}</span>
+      <span>
+        {shortAddress ?? (isConnecting ? "Connecting..." : "Connect wallet")}
+      </span>
     </Button>
   );
 }

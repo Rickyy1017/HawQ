@@ -1,4 +1,5 @@
 import { ExchangeClient, InfoClient, HttpTransport } from "@nktkas/hyperliquid";
+import type { AbstractWallet } from "@nktkas/hyperliquid/signing";
 import type { WalletClient } from "viem";
 
 // Hyperliquid TESTNET only. Non-custodial: every order is signed in the
@@ -18,7 +19,11 @@ export function getInfoClient() {
 export function getExchangeClient(wallet: WalletClient) {
   return new ExchangeClient({
     transport: new HttpTransport({ isTestnet: true }),
-    wallet,
+    // The wallet is created with an explicit account in WalletProvider; the
+    // SDK's narrower viem signer interface doesn't preserve that generic type.
+    wallet: wallet as unknown as AbstractWallet,
+    // Hyperliquid EIP-712 signatures use Arbitrum's chain ID on both networks.
+    signatureChainId: "0xa4b1",
   });
 }
 
@@ -26,10 +31,12 @@ async function loadAssetMeta(): Promise<Map<string, AssetMeta>> {
   if (!assetMetaCache) {
     const meta = await getInfoClient().meta();
     assetMetaCache = new Map(
-      meta.universe.map((a: { name: string; szDecimals: number }, i: number) => [
-        a.name,
-        { index: i, szDecimals: a.szDecimals },
-      ]),
+      meta.universe.map(
+        (a: { name: string; szDecimals: number }, i: number) => [
+          a.name,
+          { index: i, szDecimals: a.szDecimals },
+        ],
+      ),
     );
   }
   return assetMetaCache;
@@ -80,7 +87,9 @@ export async function placeMarketOrder({
 
   const rawSize = usdSize / markPrice;
   const size = roundSize(rawSize, szDecimals);
-  const limitPrice = isBuy ? markPrice * (1 + slippage) : markPrice * (1 - slippage);
+  const limitPrice = isBuy
+    ? markPrice * (1 + slippage)
+    : markPrice * (1 - slippage);
   const price = roundPrice(limitPrice, szDecimals);
 
   return exchange.order({

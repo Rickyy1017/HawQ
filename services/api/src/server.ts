@@ -7,6 +7,7 @@ import { walletsRoutes } from "./routes/wallets";
 import { perpsRoutes } from "./routes/perps";
 import { predictionsRoutes } from "./routes/predictions";
 import { positionsRoutes } from "./routes/positions";
+import { quantRoutes } from "./routes/quant";
 
 const app = Fastify({ logger: true });
 
@@ -22,6 +23,7 @@ async function main() {
   await app.register(perpsRoutes, { prefix: "/api/perps" });
   await app.register(predictionsRoutes, { prefix: "/api/predictions" });
   await app.register(positionsRoutes, { prefix: "/api/positions" });
+  await app.register(quantRoutes, { prefix: "/api/quant" });
 
   const port = Number(process.env.PORT ?? 4000);
   await app.listen({ port, host: "0.0.0.0" });

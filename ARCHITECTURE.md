@@ -39,7 +39,7 @@ Production runs the API and ingestion worker as separate Railway services agains
 - Other modules under apps/web/src/lib/api connect directly to public data providers where the page uses a direct or fallback integration.
 - Routes cover overview, protocol and chain analytics, spot prices, perps, prediction markets, stablecoins, yields, RWA, activity, comparison, and portfolio pages.
 
-The web app is not a pure API client. For example, protocol listings are fetched directly from DeFiLlama and merged with backend records; prices use CoinGecko with a Chainlink fallback when available. Some activity, stablecoin, wallet analytics, and yield views are explicitly simulated or estimated. Quant is a coming-soon area rather than an implemented strategy engine.
+The web app is not a pure API client. For example, protocol listings are fetched directly from DeFiLlama and merged with backend records; prices use CoinGecko with a Chainlink fallback when available. Some activity, stablecoin, wallet analytics, and yield views are explicitly simulated or estimated. Quant currently provides EMA trend and RSI mean-reversion backtests, risk and trade analytics, historical funding and execution-cost assumptions, and a local browser-only paper-position ledger; it does not automate exchange orders.
 
 ### Ingestion worker: services/ingestion
 
@@ -58,7 +58,7 @@ Each job writes a row to ingestion_runs with success or failure status. The work
 
 ### API: services/api
 
-Fastify registers route modules under /api/protocols, /api/chains, /api/wallets, /api/perps, /api/predictions, and /api/positions. It reads the latest rows from PostgreSQL/TimescaleDB using the shared connection pool. It also exposes GET /health. CORS is currently open and the rate limit is 120 requests per minute.
+Fastify registers route modules under /api/protocols, /api/chains, /api/wallets, /api/perps, /api/quant, /api/predictions, and /api/positions. It reads the latest rows from PostgreSQL/TimescaleDB using the shared connection pool, and the Quant candle route proxies bounded historical candle requests to Hyperliquid. It also exposes GET /health. CORS is currently open and the rate limit is 120 requests per minute.
 
 The API is a storage and position-record boundary, not a trading execution service. Position creation validates requests with SimulatedPositionSchema and stores the submitted record. It does not custody keys or broadcast an order.
 
@@ -87,6 +87,15 @@ Total TVL history is ingested separately from DeFiLlama's historical chain endpo
 4. If the user submits an order with a connected wallet, the browser signs and submits it to Hyperliquid testnet. The API records the resulting position; it does not place the order.
 
 Market data and order execution therefore use different environments: public mainnet data, testnet execution.
+
+### Quant backtesting and paper trading
+
+1. The web app requests bounded Hyperliquid candle history through GET /api/quant/candles. The API limits the market symbol, interval, lookback, page size, and total candle count, and requests historical funding rates for the same period.
+2. The browser calculates EMA trend-following or RSI mean-reversion signals from completed candles, then simulates fills at the next bar open. It applies configurable fees and slippage and applies historical funding events when the endpoint returns them.
+3. The page runs a separate chronological holdout over the latest 30% of the sample, warming indicators with earlier candles without tuning parameters against the holdout. Results include an equity curve, cost-adjusted buy-and-hold comparison, return, CAGR, drawdown, volatility, Sharpe and Sortino ratios, exposure, trade expectancy, win rate, profit factor, fee/funding totals, and the trade ledger.
+4. A separate manual paper position uses the latest live mark price and is stored in localStorage on that browser. It is not sent to the API or an exchange.
+
+The strategies are intentionally simple research examples. Historical bars do not contain order-book depth, and the model does not simulate queue position, liquidation, or market impact. If historical funding cannot be loaded, the UI explicitly reports that funding was excluded. Results are for research and demonstration, not a promise of future performance.
 
 ### Prediction markets
 

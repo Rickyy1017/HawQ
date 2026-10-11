@@ -16,6 +16,8 @@ type InjectedWallet = {
     event: string,
     listener: (...args: unknown[]) => void,
   ) => void;
+  isMetaMask?: boolean;
+  providers?: InjectedWallet[];
 };
 
 type WalletWindow = Window & { ethereum?: InjectedWallet };
@@ -25,6 +27,29 @@ function firstAccount(value: unknown): `0x${string}` | null {
   return value[0] as `0x${string}`;
 }
 
+function findInjectedWallet(): InjectedWallet | null {
+  if (typeof window === "undefined") return null;
+  const injected = (window as WalletWindow).ethereum;
+  if (!injected) return null;
+  // Browsers may expose several extensions through one ethereum object.
+  return (
+    injected.providers?.find((candidate) => candidate.isMetaMask) ?? injected
+  );
+}
+
+function walletError(error: unknown): string {
+  const code =
+    typeof error === "object" && error !== null && "code" in error
+      ? (error as { code?: unknown }).code
+      : undefined;
+  if (code === 4001) return "The wallet request was rejected.";
+  if (code === -32002)
+    return "A wallet request is already pending. Check your wallet.";
+  return error instanceof Error
+    ? error.message
+    : "Could not connect the wallet.";
+}
+
 interface WalletContextValue {
   address: `0x${string}` | null;
   client: WalletClient | null;
@@ -32,6 +57,7 @@ interface WalletContextValue {
   isConnecting: boolean;
   error: string | null;
   connect: () => Promise<string>;
+  ensureHyperliquidSigner: () => Promise<void>;
   disconnect: () => void;
 }
 
@@ -61,30 +87,56 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    const injected = (window as WalletWindow).ethereum;
+    if (findInjectedWallet()) return;
+    const handleProviderReady = () => {
+      const injected = findInjectedWallet();
+      if (injected) setProvider(injected);
+    };
+    window.addEventListener("ethereum#initialized", handleProviderReady, {
+      once: true,
+    });
+    return () =>
+      window.removeEventListener("ethereum#initialized", handleProviderReady);
+  }, []);
+
+  useEffect(() => {
+    const injected = findInjectedWallet();
     if (!injected) return;
     setProvider(injected);
 
-    const handleAccountsChanged = (accounts: unknown) =>
+    let active = true;
+    void injected
+      .request({ method: "eth_accounts" })
+      .then((accounts) => {
+        if (!active) return;
+        applyAccount(firstAccount(accounts), injected);
+      })
+      .catch(() => {
+        // Wallets can be locked or unavailable until the user opens the extension.
+      });
+
+    const handleAccountsChanged = (accounts: unknown) => {
       applyAccount(firstAccount(accounts), injected);
-    const handleDisconnect = () => applyAccount(null, injected);
+      setError(null);
+    };
+    const handleDisconnect = () => {
+      applyAccount(null, injected);
+    };
 
     injected.on?.("accountsChanged", handleAccountsChanged);
     injected.on?.("disconnect", handleDisconnect);
     return () => {
+      active = false;
       injected.removeListener?.("accountsChanged", handleAccountsChanged);
       injected.removeListener?.("disconnect", handleDisconnect);
     };
-  }, [applyAccount]);
+  }, [applyAccount, provider]);
 
   const connect = useCallback(async () => {
-    const injected =
-      provider ??
-      (typeof window === "undefined"
-        ? undefined
-        : (window as WalletWindow).ethereum);
+    const injected = provider ?? findInjectedWallet();
     if (!injected) {
-      const message = "No EVM wallet was found in this browser.";
+      const message =
+        "No EVM wallet was found. Install or enable MetaMask, then reload.";
       setError(message);
       throw new Error(message);
     }
@@ -93,21 +145,43 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setIsConnecting(true);
     setError(null);
     try {
-      const account = firstAccount(
-        await injected.request({ method: "eth_requestAccounts" }),
-      );
+      const accounts = await injected.request({
+        method: "eth_requestAccounts",
+      });
+      const account = firstAccount(accounts);
       if (!account) throw new Error("The wallet did not return an account.");
       applyAccount(account, injected);
       return account;
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Could not connect the wallet";
+      const message = walletError(err);
       setError(message);
-      throw err;
+      throw new Error(message);
     } finally {
       setIsConnecting(false);
     }
   }, [provider, applyAccount]);
+
+  const ensureHyperliquidSigner = useCallback(async () => {
+    const injected = provider ?? findInjectedWallet();
+    if (!injected || !address || !client)
+      throw new Error("Connect your wallet before placing an order.");
+
+    const currentAccount = firstAccount(
+      await injected.request({ method: "eth_accounts" }),
+    );
+    if (!currentAccount) {
+      applyAccount(null, injected);
+      throw new Error(
+        "Your wallet is disconnected. Reconnect it to place an order.",
+      );
+    }
+    if (currentAccount.toLowerCase() !== address.toLowerCase()) {
+      applyAccount(currentAccount, injected);
+      throw new Error(
+        "Your wallet account changed. Review the updated account and retry.",
+      );
+    }
+  }, [provider, address, client, applyAccount]);
 
   const disconnect = useCallback(() => {
     setAddress(null);
@@ -124,6 +198,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         isConnecting,
         error,
         connect,
+        ensureHyperliquidSigner,
         disconnect,
       }}
     >
@@ -135,9 +210,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 export function useWalletConnection() {
   const ctx = useContext(WalletContext);
   if (!ctx) {
-    throw new Error(
-      "useWalletConnection must be used within a WalletProvider",
-    );
+    throw new Error("useWalletConnection must be used within a WalletProvider");
   }
   return ctx;
 }

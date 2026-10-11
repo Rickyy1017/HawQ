@@ -11,7 +11,8 @@ HawQ is a multi-chain crypto analytics dashboard that brings DeFi total value lo
 - **Perpetuals:** Hyperliquid market data such as mark price, funding rate, open interest, and daily volume. The order flow is client-side and uses Hyperliquid testnet; the backend stores the resulting position record.
 - **Prediction markets:** live Polymarket market questions, prices, categories, volume, and available market artwork. Prediction choices are recorded as simulations; HawQ does not submit Polymarket orders.
 - **Chain analytics:** network statistics for Solana, Base, Arbitrum, Robinhood Chain, and Zcash. Wallet balance tracking is available for Solana and the EVM chains; Zcash is limited to public network and transparent-address data.
-- **Additional dashboards:** stablecoin signals, activity, yields, and some portfolio analytics are currently simulated or estimated in the frontend. They should not be treated as verified live trading data. The Quant strategy research and backtesting area is marked as coming soon.
+- **Quant research:** compare EMA trend-following and RSI mean-reversion strategies against Hyperliquid history, with a chronological holdout, fees, configurable slippage, historical funding when available, risk statistics, trade analysis, and a drawdown chart. Open/close a local paper position marked against live market prices. The paper ledger stays in the browser; no strategy order is sent to an exchange. This simplified bar model does not model liquidation, queue position, or market impact.
+- **Additional dashboards:** stablecoin signals, activity, yields, and some portfolio analytics are currently simulated or estimated in the frontend. They should not be treated as verified live trading data.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the application components, data flow, and service boundaries.
 
@@ -114,6 +115,7 @@ All API routes other than /health are prefixed with /api.
 | GET | /api/wallets/:chain/:address/history | Historical wallet snapshots |
 | GET | /api/perps/markets | Latest Hyperliquid perpetual market snapshot by symbol |
 | GET | /api/perps/markets/:symbol/history | Historical perpetual market snapshots |
+| GET | /api/quant/candles | Historical Hyperliquid candles for Quant backtests |
 | GET | /api/predictions/markets | Latest prediction markets with available artwork |
 | POST | /api/positions | Validate and store a simulated or testnet position record |
 | GET | /api/positions?wallet=:address | List recent position records, optionally filtered by wallet |

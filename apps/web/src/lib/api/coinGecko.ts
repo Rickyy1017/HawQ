@@ -49,7 +49,7 @@ export async function fetchCoinGeckoPrices(): Promise<PricePoint[]> {
   });
 }
 
-/** Fetches logos for a list of market symbols, choosing the highest-ranked match. */
+/** Loads ranked CoinGecko pages and returns logos matching requested tickers. */
 export async function fetchCoinGeckoLogos(
   symbols: string[],
 ): Promise<Record<string, string>> {
@@ -58,38 +58,35 @@ export async function fetchCoinGeckoLogos(
     .sort();
   if (!normalized.length) return {};
 
-  return cached(`cg:logos:${normalized.join(",")}`, 6 * 60 * 60_000, async () => {
-    const batches = Array.from(
-      { length: Math.ceil(normalized.length / 50) },
-      (_, index) => normalized.slice(index * 50, index * 50 + 50),
-    );
-    const results = await Promise.allSettled(
-      batches.map(async (batch) => {
-        const params = new URLSearchParams({
-          vs_currency: "usd",
-          symbols: batch.join(",").toLowerCase(),
-          include_tokens: "all",
-          order: "market_cap_desc",
-          per_page: "250",
-          page: "1",
-          sparkline: "false",
-        });
-        return safeFetch<CoinMarket[]>(
-          `https://api.coingecko.com/api/v3/coins/markets?${params}`,
-        );
-      }),
-    );
-
-    const logos: Record<string, string> = {};
-    for (const result of results) {
-      if (result.status !== "fulfilled") continue;
-      for (const coin of result.value) {
-        const symbol = coin.symbol.toUpperCase();
-        if (normalized.includes(symbol) && coin.image && !logos[symbol]) {
-          logos[symbol] = coin.image;
-        }
-      }
+  const marketPages = await cached(
+    "cg:logo-market-pages-1-4",
+    6 * 60 * 60_000,
+    async () => {
+      const pages = await Promise.allSettled(
+        [1, 2, 3, 4].map((page) => {
+          const params = new URLSearchParams({
+            vs_currency: "usd",
+            order: "market_cap_desc",
+            per_page: "250",
+            page: String(page),
+            sparkline: "false",
+          });
+          return safeFetch<CoinMarket[]>(
+            `https://api.coingecko.com/api/v3/coins/markets?${params}`,
+          );
+        }),
+      );
+      return pages.flatMap((page) =>
+        page.status === "fulfilled" ? page.value : [],
+      );
+    },
+  );
+  const logos: Record<string, string> = {};
+  for (const coin of marketPages) {
+    const symbol = coin.symbol.toUpperCase();
+    if (normalized.includes(symbol) && coin.image && !logos[symbol]) {
+      logos[symbol] = coin.image;
     }
-    return logos;
-  });
+  }
+  return logos;
 }
