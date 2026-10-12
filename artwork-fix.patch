@@ -1,0 +1,31 @@
+﻿diff --git a/apps/web/src/routes/markets.tsx b/apps/web/src/routes/markets.tsx
+index f9c8f9e..7d35a4e 100644
+--- a/apps/web/src/routes/markets.tsx
++++ b/apps/web/src/routes/markets.tsx
+@@ -35,6 +35,13 @@ import {
+   DialogTitle,
+ } from "../components/ui/dialog";
+ 
++// Artwork URLs must always point at the deployed site, never at wherever this page
++// happens to be running (localhost during dev, a preview deploy, etc.), so a market's
++// image keeps working for every viewer regardless of where it was created from.
++const PUBLIC_SITE_ORIGIN =
++  (import.meta.env.VITE_PUBLIC_SITE_URL as string | undefined)?.replace(/\/$/, "") ??
++  "https://haw-q.vercel.app";
++
+ export const Route = createFileRoute("/markets")({
+   head: () => ({
+     meta: [
+@@ -628,11 +635,8 @@ function CreateMarketDialog({
+         toast.success("All Nigeria markets already have artwork.");
+         return;
+       }
+-      if (window.location.protocol !== "https:") {
+-        throw new Error("Open the deployed HTTPS site to attach its artwork URLs.");
+-      }
+       for (const market of marketsMissingArtwork) {
+-        const imageUrl = new URL(artworkForMarket(market), window.location.origin).toString();
++        const imageUrl = new URL(artworkForMarket(market), PUBLIC_SITE_ORIGIN).toString();
+         await updateHawqMarketImage(adminKey, market.id, imageUrl);
+       }
+       toast.success(`Artwork added to ${marketsMissingArtwork.length} Nigeria markets`, {
