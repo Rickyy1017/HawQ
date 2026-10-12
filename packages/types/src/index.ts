@@ -112,7 +112,7 @@ export const CreateHawqPredictionMarketSchema = z.object({
   question: z.string().trim().min(12).max(240),
   description: z.string().trim().max(1200).optional().default(""),
   category: z.enum(PREDICTION_CATEGORIES),
-  image: z.string().url().refine((value) => value.startsWith("https://"), "Image URL must use HTTPS."),
+  image: z.string().url().refine((value) => value.startsWith("https://"), "Image URL must use HTTPS.").nullable().optional(),
   endDate: z.string().datetime(),
   resolutionSource: z.string().url().refine((value) => value.startsWith("https://"), "Resolution source URL must use HTTPS."),
 }).refine((market) => new Date(market.endDate).getTime() > Date.now(), {
@@ -120,6 +120,7 @@ export const CreateHawqPredictionMarketSchema = z.object({
   path: ["endDate"],
 });
 export type CreateHawqPredictionMarket = z.infer<typeof CreateHawqPredictionMarketSchema>;
+export const CreateHawqPredictionMarketsBatchSchema = z.array(CreateHawqPredictionMarketSchema).min(1).max(20);
 
 // ── Simulated positions (demo scope — never real money) ────────────────────
 // product 'perp': a REAL Hyperliquid TESTNET order (real matching engine, fake funds).

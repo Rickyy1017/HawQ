@@ -1,6 +1,6 @@
 import { randomUUID, timingSafeEqual } from "node:crypto";
 import type { FastifyInstance } from "fastify";
-import { CreateHawqPredictionMarketSchema, PREDICTION_CATEGORIES } from "@hawq/types";
+import { CreateHawqPredictionMarketSchema, CreateHawqPredictionMarketsBatchSchema, PREDICTION_CATEGORIES } from "@hawq/types";
 import { pool } from "../db";
 
 function isAdmin(req: { headers: Record<string, string | string[] | undefined> }) {
@@ -13,6 +13,18 @@ function isAdmin(req: { headers: Record<string, string | string[] | undefined> }
 }
 
 export async function predictionsRoutes(app: FastifyInstance) {
+  app.get("/markets/admin", async (req, reply) => {
+    if (!isAdmin(req)) return reply.code(401).send({ error: "Admin key required." });
+    const { rows } = await pool.query(
+      `SELECT id, question, category, region_tag AS "regionTag", image,
+        end_date AS "endDate", resolution_source AS "resolutionSource", status,
+        resolved_outcome AS "resolvedOutcome"
+       FROM hawq_prediction_markets
+       ORDER BY created_at DESC`,
+    );
+    return rows;
+  });
+
   // ?category=sports|politics|finance|entertainment|other &region=nigeria
   app.get("/markets", async (req) => {
     const { category, region } = req.query as { category?: string; region?: string };
@@ -89,9 +101,42 @@ export async function predictionsRoutes(app: FastifyInstance) {
          image, image AS icon, end_date AS "endDate", resolution_source AS "resolutionSource",
          status, 0.5::float8 AS "yesPrice", 0.5::float8 AS "noPrice",
          0::float8 AS volume, 0::float8 AS liquidity, 'hawq' AS venue`,
-      [id, market.question, market.description, market.category, market.image, market.endDate, market.resolutionSource],
+      [id, market.question, market.description, market.category, market.image ?? null, market.endDate, market.resolutionSource],
     );
     return reply.code(201).send(rows[0]);
+  });
+
+  app.post("/markets/bulk", async (req, reply) => {
+    if (!isAdmin(req)) return reply.code(401).send({ error: "Admin key required." });
+    const parsed = CreateHawqPredictionMarketsBatchSchema.safeParse(req.body);
+    if (!parsed.success) return reply.code(400).send({ error: parsed.error.issues[0]?.message ?? "Invalid market batch." });
+
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const rows = [];
+      for (const market of parsed.data) {
+        const id = `hawq-${randomUUID()}`;
+        const result = await client.query(
+          `INSERT INTO hawq_prediction_markets
+            (id, question, description, category, region_tag, image, end_date, resolution_source)
+           VALUES ($1, $2, $3, $4, 'nigeria', $5, $6, $7)
+           RETURNING id, question, description, category, region_tag AS "regionTag",
+             image, image AS icon, end_date AS "endDate", resolution_source AS "resolutionSource",
+             status, 0.5::float8 AS "yesPrice", 0.5::float8 AS "noPrice",
+             0::float8 AS volume, 0::float8 AS liquidity, 'hawq' AS venue`,
+          [id, market.question, market.description, market.category, market.image ?? null, market.endDate, market.resolutionSource],
+        );
+        rows.push(result.rows[0]);
+      }
+      await client.query("COMMIT");
+      return reply.code(201).send(rows);
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
   });
 
   app.post("/markets/:id/resolve", async (req, reply) => {
@@ -104,11 +149,35 @@ export async function predictionsRoutes(app: FastifyInstance) {
     const result = await pool.query(
       `UPDATE hawq_prediction_markets
        SET status = 'resolved', resolved_outcome = $2, updated_at = now()
-       WHERE id = $1 AND status = 'open'
+       WHERE id = $1 AND status = 'open' AND end_date <= now()
        RETURNING id, status, resolved_outcome AS "resolvedOutcome"`,
       [id, body.outcome],
     );
-    if (!result.rowCount) return reply.code(404).send({ error: "Open HawQ market not found." });
+    if (!result.rowCount) {
+      const existing = await pool.query(
+        `SELECT status, end_date > now() AS "notClosed" FROM hawq_prediction_markets WHERE id = $1`,
+        [id],
+      );
+      if (!existing.rowCount) return reply.code(404).send({ error: "HawQ market not found." });
+      if (existing.rows[0].notClosed) return reply.code(409).send({ error: "This market has not reached its close date." });
+      return reply.code(409).send({ error: "This market has already been resolved or closed." });
+    }
+    return result.rows[0];
+  });
+
+  app.patch("/markets/:id/image", async (req, reply) => {
+    if (!isAdmin(req)) return reply.code(401).send({ error: "Admin key required." });
+    const { id } = req.params as { id: string };
+    const body = req.body as { image?: unknown };
+    if (body?.image !== null && (typeof body?.image !== "string" || !body.image.startsWith("https://"))) {
+      return reply.code(400).send({ error: "Image must be an HTTPS URL or null." });
+    }
+    const result = await pool.query(
+      `UPDATE hawq_prediction_markets SET image = $2, updated_at = now()
+       WHERE id = $1 RETURNING id, image`,
+      [id, body.image],
+    );
+    if (!result.rowCount) return reply.code(404).send({ error: "HawQ market not found." });
     return result.rows[0];
   });
 }

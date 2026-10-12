@@ -1,0 +1,162 @@
+[
+  {
+    "question": "Will Nigeria's 2027 presidential election be held on 16 January?",
+    "description": "YES if INEC records the nationwide presidential election as held on 16 January 2027. NO if it is postponed or held on another date. Resolve from INEC's official election calendar and results notices.",
+    "category": "politics",
+    "image": null,
+    "endDate": "2027-01-17T18:00:00.000Z",
+    "resolutionSource": "https://www.inecnigeria.org/elections/calendar"
+  },
+  {
+    "question": "Will the APC win Nigeria's 2027 presidential election?",
+    "description": "YES if the INEC-declared winner of the 2027 Nigerian presidential election was officially nominated by the All Progressives Congress (APC). Otherwise NO. Resolve from INEC's final result.",
+    "category": "politics",
+    "image": null,
+    "endDate": "2027-06-01T18:00:00.000Z",
+    "resolutionSource": "https://www.inecnigeria.org/"
+  },
+  {
+    "question": "Will the PDP win Nigeria's 2027 presidential election?",
+    "description": "YES if the INEC-declared winner of the 2027 Nigerian presidential election was officially nominated by the Peoples Democratic Party (PDP). Otherwise NO. Resolve from INEC's final result.",
+    "category": "politics",
+    "image": null,
+    "endDate": "2027-06-01T18:00:00.000Z",
+    "resolutionSource": "https://www.inecnigeria.org/"
+  },
+  {
+    "question": "Will a presidential candidate outside the APC and PDP win Nigeria's 2027 election?",
+    "description": "YES if INEC declares the winner of the 2027 presidential election and that candidate was nominated by a party other than the APC or PDP. Otherwise NO.",
+    "category": "politics",
+    "image": null,
+    "endDate": "2027-06-01T18:00:00.000Z",
+    "resolutionSource": "https://www.inecnigeria.org/"
+  },
+  {
+    "question": "Will a woman win a governorship in Nigeria's 2027 elections?",
+    "description": "YES if at least one woman is declared elected governor in a state holding a 2027 governorship election. Resolve using INEC's certified state results; a court-ordered rerun counts when the final result is certified.",
+    "category": "politics",
+    "image": null,
+    "endDate": "2027-06-01T18:00:00.000Z",
+    "resolutionSource": "https://www.inecnigeria.org/elections/calendar"
+  },
+  {
+    "question": "Will Nigeria's CBN cut its Monetary Policy Rate at the November 2026 meeting?",
+    "description": "YES if the CBN announces an MPR lower than 23.00% at the conclusion of its 23–24 November 2026 MPC meeting. Otherwise NO. Resolve from the CBN's official decision or communique.",
+    "category": "finance",
+    "image": null,
+    "endDate": "2026-11-25T12:00:00.000Z",
+    "resolutionSource": "https://www.cbn.gov.ng/MonetaryPolicy/decisions.html"
+  },
+  {
+    "question": "Will Nigeria's CBN raise its Monetary Policy Rate at the November 2026 meeting?",
+    "description": "YES if the CBN announces an MPR higher than 23.00% after its 23–24 November 2026 MPC meeting. Otherwise NO. Resolve from the CBN's official decision or communique.",
+    "category": "finance",
+    "image": null,
+    "endDate": "2026-11-25T12:00:00.000Z",
+    "resolutionSource": "https://www.cbn.gov.ng/MonetaryPolicy/decisions.html"
+  },
+  {
+    "question": "Will Nigeria's Monetary Policy Rate be 20% or lower by 31 December 2026?",
+    "description": "YES if the CBN's published MPR in force at the end of 31 December 2026 is 20.00% or lower. Otherwise NO. Resolve from the latest CBN policy decision published on or before that date.",
+    "category": "finance",
+    "image": null,
+    "endDate": "2027-01-01T12:00:00.000Z",
+    "resolutionSource": "https://www.cbn.gov.ng/MonetaryPolicy/decisions.html"
+  },
+  {
+    "question": "Will the NGX All-Share Index close above 250,000 on its last 2026 trading day?",
+    "description": "YES if the Nigerian Exchange's official NGX All-Share Index closing value on its final trading day in 2026 is greater than 250,000.00. Otherwise NO. Use the official NGX market data close.",
+    "category": "finance",
+    "image": null,
+    "endDate": "2027-01-01T18:00:00.000Z",
+    "resolutionSource": "https://ngxgroup.com/"
+  },
+  {
+    "question": "Will the CBN's official USD/NGN rate be below ₦1,400 on 31 December 2026?",
+    "description": "YES if the CBN's published official USD/NGN rate for 31 December 2026 is less than ₦1,400 per US dollar. Otherwise NO. Resolve from the CBN exchange-rate publication for that date; if no rate is published for that date, use the last published rate before it.",
+    "category": "finance",
+    "image": null,
+    "endDate": "2027-01-01T18:00:00.000Z",
+    "resolutionSource": "https://www.cbn.gov.ng/rates/ExchRateByCurrency.html"
+  },
+  {
+    "question": "Will Nigeria's Super Falcons beat Comoros in the 13 October Olympic qualifier?",
+    "description": "YES if Nigeria wins the second-leg match against Comoros scheduled for 13 October 2026. A draw or Comoros win resolves NO. This is the match result only, not the aggregate tie. Resolve from NFF or CAF's official match report.",
+    "category": "sports",
+    "image": null,
+    "endDate": "2026-10-14T12:00:00.000Z",
+    "resolutionSource": "https://thenff.com/la-2028-olympics-race-eguavoen-invites-ajibade-nnadozie-26-others-for-comoros/"
+  },
+  {
+    "question": "Will Nigeria qualify for the 2027 Africa Cup of Nations?",
+    "description": "YES if Nigeria finishes as the highest-ranked non-host nation in Group L and qualifies for the 2027 AFCON finals. Tanzania is an automatically qualified co-host. Resolve from CAF's final Group L standings or official qualification announcement.",
+    "category": "sports",
+    "image": null,
+    "endDate": "2027-04-01T12:00:00.000Z",
+    "resolutionSource": "https://www.cafonline.com/afcon2025/news/the-road-to-east-africa-mapped-out-the-qualifier-draw-for-the-totalenergies-caf-africa-cup-of-nations-pamoja-2027-concluded/"
+  },
+  {
+    "question": "Will Nigeria reach the knockout stage of the 2027 Africa Cup of Nations?",
+    "description": "YES if Nigeria advances from the group stage into the AFCON PAMOJA 2027 knockout rounds. Otherwise NO. Resolve from CAF's official tournament results and bracket.",
+    "category": "sports",
+    "image": null,
+    "endDate": "2027-07-01T12:00:00.000Z",
+    "resolutionSource": "https://www.cafonline.com/afcon2025/"
+  },
+  {
+    "question": "Will Nigeria reach the semi-finals of the 2027 Africa Cup of Nations?",
+    "description": "YES if Nigeria advances to the semi-final stage of AFCON PAMOJA 2027. Otherwise NO. Resolve from CAF's official tournament bracket and results.",
+    "category": "sports",
+    "image": null,
+    "endDate": "2027-07-15T12:00:00.000Z",
+    "resolutionSource": "https://www.cafonline.com/afcon2025/"
+  },
+  {
+    "question": "Will Nigeria win the 2027 Africa Cup of Nations?",
+    "description": "YES if Nigeria is declared champion of AFCON PAMOJA 2027 by CAF. Otherwise NO. Resolve from CAF's official final and tournament record.",
+    "category": "sports",
+    "image": null,
+    "endDate": "2027-07-18T12:00:00.000Z",
+    "resolutionSource": "https://www.cafonline.com/afcon2025/"
+  },
+  {
+    "question": "Will a Nigerian artist receive a 2027 Grammy nomination?",
+    "description": "YES if at least one artist who is Nigerian by nationality is named as a nominee in any category at the 2027 Grammy Awards. Otherwise NO. Resolve from the Recording Academy's official nominees list announced 16 November 2026.",
+    "category": "entertainment",
+    "image": null,
+    "endDate": "2026-11-17T12:00:00.000Z",
+    "resolutionSource": "https://www.grammy.com/news/2027-grammys-show-air-date-nominations-announced/"
+  },
+  {
+    "question": "Will a Nigerian artist win a 2027 Grammy Award?",
+    "description": "YES if an artist who is Nigerian by nationality is credited among the winner(s) in any category at the 2027 Grammy Awards. Otherwise NO. Resolve from the Recording Academy's official winners list.",
+    "category": "entertainment",
+    "image": null,
+    "endDate": "2027-02-08T12:00:00.000Z",
+    "resolutionSource": "https://www.grammy.com/news/2027-grammys-show-air-date-nominations-announced/"
+  },
+  {
+    "question": "Will a Nigerian artist win Best African Music Performance at the 2027 Grammys?",
+    "description": "YES if a Nigerian artist or credited Nigerian group is named winner of Best African Music Performance at the 2027 Grammy Awards. Otherwise NO. Resolve from the Recording Academy's official winner announcement.",
+    "category": "entertainment",
+    "image": null,
+    "endDate": "2027-02-08T12:00:00.000Z",
+    "resolutionSource": "https://www.grammy.com/news/2027-grammys-show-air-date-nominations-announced/"
+  },
+  {
+    "question": "Will Nigeria's 2027 Oscar submission make the International Feature shortlist?",
+    "description": "YES if a film officially submitted by Nigeria for the 99th Academy Awards appears on the Academy's International Feature Film shortlist. If Nigeria submits no eligible film, resolve NO. Resolve from the Academy's official shortlist.",
+    "category": "entertainment",
+    "image": null,
+    "endDate": "2026-12-16T12:00:00.000Z",
+    "resolutionSource": "https://www.oscars.org/99th-oscars-and-academy-key-dates"
+  },
+  {
+    "question": "Will a Nigerian film be nominated for International Feature at the 99th Oscars?",
+    "description": "YES if a film officially submitted by Nigeria for the 99th Academy Awards is among the International Feature Film nominees announced by the Academy. If Nigeria submits no eligible film, resolve NO. Resolve from the Academy's official nominee list.",
+    "category": "entertainment",
+    "image": null,
+    "endDate": "2027-01-22T12:00:00.000Z",
+    "resolutionSource": "https://www.oscars.org/99th-oscars-and-academy-key-dates"
+  }
+]

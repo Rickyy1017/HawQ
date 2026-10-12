@@ -16,7 +16,16 @@ import {
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { usePositions } from "../hooks/usePositions";
-import { createHawqMarket, getPredictionMarkets, type PredictionMarket } from "../lib/api/hawq";
+import {
+  createHawqMarket,
+  createHawqMarketsBatch,
+  getHawqAdminMarkets,
+  getPredictionMarkets,
+  resolveHawqMarket,
+  updateHawqMarketImage,
+  type HawqAdminMarket,
+  type PredictionMarket,
+} from "../lib/api/hawq";
 import {
   Dialog,
   DialogContent,
@@ -46,8 +55,6 @@ export const Route = createFileRoute("/markets")({
   component: MarketsPage,
 });
 
-const globalTopics = ["Trump", "Fed", "Nobel Prize", "Midterms", "Bitcoin"];
-const nigeriaTopics = ["Presidency", "Naira", "Super Eagles", "Nollywood"];
 const compactVolume = (volume: number) =>
   Intl.NumberFormat("en", {
     notation: "compact",
@@ -123,7 +130,6 @@ function MarketsPage() {
     market: PredictionMarket;
     side: "yes" | "no";
   } | null>(null);
-  const [topic, setTopic] = useState("");
   const [search, setSearch] = useState("");
   const queryClient = useQueryClient();
   const markets = useQuery({
@@ -148,10 +154,7 @@ function MarketsPage() {
     .slice(0, 6);
   const visibleMarkets = allMarkets.filter((market) => {
     const text = market.question.toLowerCase();
-    return (
-      (!topic || text.includes(topic.toLowerCase())) &&
-      (!search || text.includes(search.toLowerCase()))
-    );
+    return !search || text.includes(search.toLowerCase());
   });
 
   const buy = async (market: PredictionMarket, side: "yes" | "no") => {
@@ -278,30 +281,11 @@ function MarketsPage() {
               key={value}
               onClick={() => {
                 setCategory(value);
-                setTopic("");
               }}
               className={`flex min-h-20 flex-col items-center justify-center gap-2 rounded-xl border p-3 text-xs font-medium transition ${category === value ? "border-primary/40 bg-primary/10" : "border-transparent bg-secondary/60 hover:bg-secondary"}`}
             >
               <Icon className="h-4 w-4" />
               {label}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="space-y-3">
-        <SectionTitle>Popular today</SectionTitle>
-        <div className="flex flex-wrap gap-2">
-          {(region === "nigeria" ? nigeriaTopics : globalTopics).map((item) => (
-            <button
-              key={item}
-              onClick={() => {
-                setTopic(topic === item ? "" : item);
-                setCategory("all");
-              }}
-              className={`rounded-full px-3 py-1.5 text-xs ${topic === item ? "bg-primary text-primary-foreground" : "bg-secondary/70 hover:bg-secondary"}`}
-            >
-              {item}
             </button>
           ))}
         </div>
@@ -331,9 +315,21 @@ function MarketsPage() {
             Markets unavailable. Please try again later.
           </p>
         ) : !visibleMarkets.length ? (
-          <p className="py-10 text-center text-muted-foreground">
-            No markets found for this filter.
-          </p>
+          <div className="rounded-2xl border border-dashed border-border bg-card/50 px-5 py-10 text-center">
+            <p className="font-medium">
+              {region === "nigeria" && category === "all" && !search
+                ? "No Nigeria markets have been published yet."
+                : "No markets found for this filter."}
+            </p>
+            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+              HawQ markets are created with a real event, an image, and a resolution source. Picks are simulated and do not use real money.
+            </p>
+            {region === "nigeria" && category === "all" && !search && (
+              <Button className="mt-4" onClick={() => setCreateOpen(true)}>
+                <Plus className="h-4 w-4" /> Create the first market
+              </Button>
+            )}
+          </div>
         ) : (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {visibleMarkets.map((market) => (
@@ -555,6 +551,80 @@ function CreateMarketDialog({
   const [endDate, setEndDate] = useState("");
   const [resolutionSource, setResolutionSource] = useState("");
   const [saving, setSaving] = useState(false);
+  const [managedMarkets, setManagedMarkets] = useState<HawqAdminMarket[] | null>(null);
+  const [loadingMarkets, setLoadingMarkets] = useState(false);
+  const [resolvingMarket, setResolvingMarket] = useState<string | null>(null);
+  const [importingPack, setImportingPack] = useState(false);
+  const [savingImageFor, setSavingImageFor] = useState<string | null>(null);
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+
+  const importStarterPack = async () => {
+    setImportingPack(true);
+    try {
+      const response = await fetch("/nigeria-market-starter-pack.json");
+      if (!response.ok) throw new Error("Could not load the Nigeria market starter pack.");
+      const pack = await response.json();
+      const created = await createHawqMarketsBatch(adminKey, pack);
+      toast.success(`${created.length} Nigeria markets published`, {
+        description: "They are now in the HawQ database. Add matching artwork whenever you have it.",
+      });
+      await onCreated();
+      await loadManagedMarkets();
+    } catch (error) {
+      toast.error("Could not import markets", {
+        description: error instanceof Error ? error.message : "Check that the admin key and database migration are ready.",
+      });
+    } finally {
+      setImportingPack(false);
+    }
+  };
+
+  const loadManagedMarkets = async () => {
+    if (!adminKey) return;
+    setLoadingMarkets(true);
+    try {
+      setManagedMarkets(await getHawqAdminMarkets(adminKey));
+    } catch (error) {
+      toast.error("Could not load HawQ markets", {
+        description: error instanceof Error ? error.message : "Check the admin key and try again.",
+      });
+    } finally {
+      setLoadingMarkets(false);
+    }
+  };
+
+  const resolveMarket = async (market: HawqAdminMarket, outcome: "yes" | "no") => {
+    setResolvingMarket(market.id);
+    try {
+      await resolveHawqMarket(adminKey, market.id, outcome);
+      toast.success(`Market resolved ${outcome.toUpperCase()}`, { description: market.question });
+      await loadManagedMarkets();
+      await onCreated();
+    } catch (error) {
+      toast.error("Could not resolve market", {
+        description: error instanceof Error ? error.message : "Check the market close date and try again.",
+      });
+    } finally {
+      setResolvingMarket(null);
+    }
+  };
+
+  const saveMarketImage = async (market: HawqAdminMarket) => {
+    setSavingImageFor(market.id);
+    try {
+      await updateHawqMarketImage(adminKey, market.id, imageUrls[market.id]?.trim() || null);
+      toast.success("Market artwork updated", { description: market.question });
+      setImageUrls((current) => ({ ...current, [market.id]: "" }));
+      await loadManagedMarkets();
+      await onCreated();
+    } catch (error) {
+      toast.error("Could not update market artwork", {
+        description: error instanceof Error ? error.message : "Use an HTTPS image URL and try again.",
+      });
+    } finally {
+      setSavingImageFor(null);
+    }
+  };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -576,6 +646,7 @@ function CreateMarketDialog({
       setResolutionSource("");
       onOpenChange(false);
       await onCreated();
+      await loadManagedMarkets();
     } catch (error) {
       toast.error("Could not create market", {
         description: error instanceof Error ? error.message : "Check the details and try again.",
@@ -591,7 +662,7 @@ function CreateMarketDialog({
         <DialogHeader className="text-left">
           <DialogTitle>Create a Nigeria market</DialogTitle>
           <DialogDescription>
-            Publish a HawQ play-money forecast with an image and a verifiable resolution source.
+            Publish a HawQ play-money forecast with a verifiable resolution source. Artwork can be added later.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-3">
@@ -608,7 +679,7 @@ function CreateMarketDialog({
             </select>
             <Input type="datetime-local" aria-label="Market close date" value={endDate} onChange={(event) => setEndDate(event.target.value)} required />
           </div>
-          <Input type="url" placeholder="Market image URL (https://...)" value={image} onChange={(event) => setImage(event.target.value)} required />
+          <Input type="url" placeholder="Market image URL (optional; add later)" value={image} onChange={(event) => setImage(event.target.value)} />
           {image && <img key={image} src={image} alt="Market image preview" className="h-28 w-full rounded-xl bg-secondary object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} />}
           <Input type="url" placeholder="Resolution source URL" value={resolutionSource} onChange={(event) => setResolutionSource(event.target.value)} required />
           <p className="text-xs leading-relaxed text-muted-foreground">
@@ -618,6 +689,60 @@ function CreateMarketDialog({
             {saving ? "Creating market…" : "Publish market"}
           </Button>
         </form>
+        <section className="space-y-3 border-t border-border pt-4">
+          <div className="space-y-2 rounded-xl bg-secondary/50 p-3">
+            <p className="text-sm font-medium">Nigeria starter pack · 20 markets</p>
+            <p className="text-xs text-muted-foreground">Imports the prepared politics, finance, sports, and entertainment markets into HawQ's database. Images are intentionally blank for now.</p>
+            <Button type="button" variant="outline" className="w-full" disabled={!adminKey || importingPack} onClick={importStarterPack}>
+              {importingPack ? "Publishing 20 markets…" : "Publish Nigeria starter pack"}
+            </Button>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold">Manage HawQ markets</h3>
+            <Button type="button" variant="outline" size="sm" onClick={loadManagedMarkets} disabled={!adminKey || loadingMarkets}>
+              {loadingMarkets ? "Loading…" : "Load markets"}
+            </Button>
+          </div>
+          {managedMarkets?.length === 0 && <p className="text-xs text-muted-foreground">No HawQ markets yet.</p>}
+          {managedMarkets?.map((market) => {
+            const isClosed = new Date(market.endDate).getTime() <= Date.now();
+            return (
+              <div key={market.id} className="flex items-start gap-3 rounded-xl border border-border/70 p-3">
+                {market.image ? <img src={market.image} alt="" className="h-11 w-11 shrink-0 rounded-lg bg-secondary object-cover" /> : <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-primary/10 text-xs font-bold text-primary">NG</div>}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium leading-snug">{market.question}</p>
+                  <a href={market.resolutionSource} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-primary hover:underline">Resolution source</a>
+                  <div className="mt-2 flex gap-2">
+                    <Input
+                      type="url"
+                      aria-label={`Artwork URL for ${market.question}`}
+                      placeholder={market.image ? "Replace artwork URL" : "Add artwork URL later"}
+                      value={imageUrls[market.id] ?? ""}
+                      onChange={(event) => setImageUrls((current) => ({ ...current, [market.id]: event.target.value }))}
+                      className="h-8 text-xs"
+                    />
+                    <Button type="button" size="sm" variant="outline" className="h-8 shrink-0" disabled={!imageUrls[market.id]?.trim() || savingImageFor !== null} onClick={() => saveMarketImage(market)}>
+                      {savingImageFor === market.id ? "Saving…" : "Save image"}
+                    </Button>
+                  </div>
+                  <p className="mt-1 text-[11px] capitalize text-muted-foreground">
+                    {market.category} · {market.status === "resolved" ? `Resolved ${market.resolvedOutcome?.toUpperCase()}` : isClosed ? "Ready to resolve" : `Closes ${new Date(market.endDate).toLocaleString()}`}
+                  </p>
+                  {market.status === "open" && isClosed && (
+                    <div className="mt-2 flex gap-2">
+                      <Button type="button" size="sm" className="h-7" disabled={resolvingMarket !== null} onClick={() => resolveMarket(market, "yes")}>
+                        {resolvingMarket === market.id ? "Saving…" : "Resolve Yes"}
+                      </Button>
+                      <Button type="button" size="sm" variant="outline" className="h-7" disabled={resolvingMarket !== null} onClick={() => resolveMarket(market, "no")}>
+                        Resolve No
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </section>
       </DialogContent>
     </Dialog>
   );

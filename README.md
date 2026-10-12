@@ -118,8 +118,11 @@ All API routes other than /health are prefixed with /api.
 | GET | /api/perps/markets/:symbol/history | Historical perpetual market snapshots |
 | GET | /api/quant/candles | Historical Hyperliquid candles for Quant backtests |
 | GET | /api/predictions/markets | Latest Polymarket markets and open HawQ markets; supports category and region filters |
+| GET | /api/predictions/markets/admin | List HawQ markets for management (requires `x-hawq-admin-key`) |
 | POST | /api/predictions/markets | Create a Nigeria play-money market (requires `x-hawq-admin-key`) |
-| POST | /api/predictions/markets/:id/resolve | Resolve a HawQ market as yes/no (requires `x-hawq-admin-key`) |
+| POST | /api/predictions/markets/bulk | Create up to 20 Nigeria play-money markets atomically (requires `x-hawq-admin-key`) |
+| POST | /api/predictions/markets/:id/resolve | Resolve a closed HawQ market as yes/no (requires `x-hawq-admin-key`) |
+| PATCH | /api/predictions/markets/:id/image | Set or clear a HawQ market image URL (requires `x-hawq-admin-key`) |
 | POST | /api/positions | Validate and store a simulated or testnet position record |
 | GET | /api/positions?wallet=:address | List recent position records, optionally filtered by wallet |
 

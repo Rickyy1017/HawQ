@@ -227,7 +227,7 @@ export async function createHawqMarket(
     question: string;
     description: string;
     category: string;
-    image: string;
+    image?: string | null;
     endDate: string;
     resolutionSource: string;
   },
@@ -239,6 +239,71 @@ export async function createHawqMarket(
       body: JSON.stringify(market),
     }),
   );
+}
+
+export async function createHawqMarketsBatch(
+  adminKey: string,
+  markets: Array<{
+    question: string;
+    description: string;
+    category: string;
+    image?: string | null;
+    endDate: string;
+    resolutionSource: string;
+  }>,
+): Promise<PredictionMarket[]> {
+  return z.array(predictionMarketSchema).parse(
+    await request("/api/predictions/markets/bulk", {
+      method: "POST",
+      headers: { "x-hawq-admin-key": adminKey },
+      body: JSON.stringify(markets),
+    }),
+  );
+}
+
+const hawqAdminMarketSchema = z.object({
+  id: z.string(),
+  question: z.string(),
+  category: z.string(),
+  regionTag: z.string(),
+  image: z.string().nullable(),
+  endDate: z.union([z.string(), z.number()]),
+  resolutionSource: z.string(),
+  status: z.enum(["open", "closed", "resolved"]),
+  resolvedOutcome: z.enum(["yes", "no"]).nullable().optional(),
+});
+export type HawqAdminMarket = z.infer<typeof hawqAdminMarketSchema>;
+
+export async function getHawqAdminMarkets(adminKey: string): Promise<HawqAdminMarket[]> {
+  return z.array(hawqAdminMarketSchema).parse(
+    await request("/api/predictions/markets/admin", {
+      headers: { "x-hawq-admin-key": adminKey },
+    }),
+  );
+}
+
+export async function resolveHawqMarket(
+  adminKey: string,
+  marketId: string,
+  outcome: "yes" | "no",
+): Promise<void> {
+  await request(`/api/predictions/markets/${encodeURIComponent(marketId)}/resolve`, {
+    method: "POST",
+    headers: { "x-hawq-admin-key": adminKey },
+    body: JSON.stringify({ outcome }),
+  });
+}
+
+export async function updateHawqMarketImage(
+  adminKey: string,
+  marketId: string,
+  image: string | null,
+): Promise<void> {
+  await request(`/api/predictions/markets/${encodeURIComponent(marketId)}/image`, {
+    method: "PATCH",
+    headers: { "x-hawq-admin-key": adminKey },
+    body: JSON.stringify({ image }),
+  });
 }
 export async function getPositions(): Promise<Position[]> {
   return z
