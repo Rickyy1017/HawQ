@@ -94,6 +94,23 @@ function MarketHeading({ market }: { market: PredictionMarket }) {
   );
 }
 
+function artworkForMarket(market: HawqAdminMarket) {
+  if (market.category === "politics") return "/market-artwork/election.svg";
+  if (market.category === "finance") {
+    if (market.question.startsWith("Will the NGX")) return "/market-artwork/ngx-market.svg";
+    if (market.question.startsWith("Will the CBN's official USD/NGN")) return "/market-artwork/naira-fx.svg";
+    return "/market-artwork/cbn-mpc.svg";
+  }
+  if (market.category === "sports") {
+    return market.question.startsWith("Will Nigeria's Super Falcons")
+      ? "/market-artwork/super-falcons.svg"
+      : "/market-artwork/afcon-2027.svg";
+  }
+  return market.question.includes("Oscar")
+    ? "/market-artwork/nigerian-cinema.svg"
+    : "/market-artwork/grammy-night.svg";
+}
+
 function PriceButton({
   side,
   price,
@@ -376,6 +393,9 @@ function MarketsPage() {
                     />
                   </div>
                 </div>
+                {market.venue === "hawq" && market.volume === 0 && (
+                  <p className="mt-2 text-[10px] text-muted-foreground">No picks yet · 50% neutral opening price</p>
+                )}
                 <div className="mt-3 flex items-center justify-end gap-1 text-[11px] text-muted-foreground">
                   ${compactVolume(market.volume)} Vol.{" "}
                   <ChevronRight className="h-3 w-3" />
@@ -555,6 +575,7 @@ function CreateMarketDialog({
   const [loadingMarkets, setLoadingMarkets] = useState(false);
   const [resolvingMarket, setResolvingMarket] = useState<string | null>(null);
   const [importingPack, setImportingPack] = useState(false);
+  const [addingArtwork, setAddingArtwork] = useState(false);
   const [savingImageFor, setSavingImageFor] = useState<string | null>(null);
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
 
@@ -566,7 +587,7 @@ function CreateMarketDialog({
       const pack = await response.json();
       const created = await createHawqMarketsBatch(adminKey, pack);
       toast.success(`${created.length} Nigeria markets published`, {
-        description: "They are now in the HawQ database. Add matching artwork whenever you have it.",
+        description: "They are now in the HawQ database. Apply the matching artwork from this dialog.",
       });
       await onCreated();
       await loadManagedMarkets();
@@ -590,6 +611,41 @@ function CreateMarketDialog({
       });
     } finally {
       setLoadingMarkets(false);
+    }
+  };
+
+  const addMatchingArtwork = async () => {
+    setAddingArtwork(true);
+    try {
+      const markets = await getHawqAdminMarkets(adminKey);
+      const nigeriaMarkets = markets.filter((market) => market.regionTag === "nigeria");
+      if (nigeriaMarkets.length === 0) {
+        toast.error("No Nigeria markets found", { description: "Publish the starter pack first." });
+        return;
+      }
+      const marketsMissingArtwork = nigeriaMarkets.filter((market) => !market.image);
+      if (marketsMissingArtwork.length === 0) {
+        toast.success("All Nigeria markets already have artwork.");
+        return;
+      }
+      if (window.location.protocol !== "https:") {
+        throw new Error("Open the deployed HTTPS site to attach its artwork URLs.");
+      }
+      for (const market of marketsMissingArtwork) {
+        const imageUrl = new URL(artworkForMarket(market), window.location.origin).toString();
+        await updateHawqMarketImage(adminKey, market.id, imageUrl);
+      }
+      toast.success(`Artwork added to ${marketsMissingArtwork.length} Nigeria markets`, {
+        description: "Each market now has a matching HawQ illustration.",
+      });
+      await loadManagedMarkets();
+      await onCreated();
+    } catch (error) {
+      toast.error("Could not add market artwork", {
+        description: error instanceof Error ? error.message : "Check the admin key and try again.",
+      });
+    } finally {
+      setAddingArtwork(false);
     }
   };
 
@@ -662,7 +718,7 @@ function CreateMarketDialog({
         <DialogHeader className="text-left">
           <DialogTitle>Create a Nigeria market</DialogTitle>
           <DialogDescription>
-            Publish a HawQ play-money forecast with a verifiable resolution source. Artwork can be added later.
+            Publish a HawQ play-money forecast with a verifiable resolution source and matching artwork.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-3">
@@ -692,9 +748,16 @@ function CreateMarketDialog({
         <section className="space-y-3 border-t border-border pt-4">
           <div className="space-y-2 rounded-xl bg-secondary/50 p-3">
             <p className="text-sm font-medium">Nigeria starter pack · 20 markets</p>
-            <p className="text-xs text-muted-foreground">Imports the prepared politics, finance, sports, and entertainment markets into HawQ's database. Images are intentionally blank for now.</p>
+            <p className="text-xs text-muted-foreground">Imports the prepared politics, finance, sports, and entertainment markets into HawQ's database.</p>
             <Button type="button" variant="outline" className="w-full" disabled={!adminKey || importingPack} onClick={importStarterPack}>
               {importingPack ? "Publishing 20 markets…" : "Publish Nigeria starter pack"}
+            </Button>
+          </div>
+          <div className="space-y-2 rounded-xl bg-secondary/50 p-3">
+            <p className="text-sm font-medium">Matching HawQ artwork</p>
+            <p className="text-xs text-muted-foreground">Add original Nigeria, market, football, music, and film illustrations to the existing Nigeria markets.</p>
+            <Button type="button" variant="outline" className="w-full" disabled={!adminKey || addingArtwork} onClick={addMatchingArtwork}>
+              {addingArtwork ? "Adding artwork…" : "Add artwork to Nigeria markets"}
             </Button>
           </div>
           <div className="flex items-center justify-between gap-3">
