@@ -95,11 +95,17 @@ function MarketHeading({ market }: { market: PredictionMarket }) {
 }
 
 function artworkForMarket(market: HawqAdminMarket) {
-  if (market.category === "politics") return "/market-artwork/election.svg";
+  if (market.category === "politics") {
+    if (market.question.includes("APC")) return "/market-artwork/apc.svg";
+    if (market.question.includes("PDP")) return "/market-artwork/pdp.svg";
+    if (market.question.includes("outside the APC and PDP")) return "/market-artwork/other-party.svg";
+    if (market.question.includes("woman win a governorship")) return "/market-artwork/woman-governor.svg";
+    return "/market-artwork/inec-election.svg";
+  }
   if (market.category === "finance") {
     if (market.question.startsWith("Will the NGX")) return "/market-artwork/ngx-market.svg";
     if (market.question.startsWith("Will the CBN's official USD/NGN")) return "/market-artwork/naira-fx.svg";
-    return "/market-artwork/cbn-mpc.svg";
+    return "/market-artwork/cbn-seal.svg";
   }
   if (market.category === "sports") {
     return market.question.startsWith("Will Nigeria's Super Falcons")
@@ -107,9 +113,11 @@ function artworkForMarket(market: HawqAdminMarket) {
       : "/market-artwork/afcon-2027.svg";
   }
   return market.question.includes("Oscar")
-    ? "/market-artwork/nigerian-cinema.svg"
-    : "/market-artwork/grammy-night.svg";
+    ? "/market-artwork/oscar-awards.svg"
+    : "/market-artwork/grammy-awards.svg";
 }
+
+const publicAppUrl = import.meta.env.VITE_PUBLIC_APP_URL || "https://hawqq.vercel.app";
 
 function PriceButton({
   side,
@@ -628,11 +636,8 @@ function CreateMarketDialog({
         toast.success("All Nigeria markets already have artwork.");
         return;
       }
-      if (window.location.protocol !== "https:") {
-        throw new Error("Open the deployed HTTPS site to attach its artwork URLs.");
-      }
       for (const market of marketsMissingArtwork) {
-        const imageUrl = new URL(artworkForMarket(market), window.location.origin).toString();
+        const imageUrl = new URL(artworkForMarket(market), publicAppUrl).toString();
         await updateHawqMarketImage(adminKey, market.id, imageUrl);
       }
       toast.success(`Artwork added to ${marketsMissingArtwork.length} Nigeria markets`, {

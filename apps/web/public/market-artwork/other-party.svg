@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">
+  <defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#21173d"/><stop offset="1" stop-color="#0d1024"/></linearGradient></defs>
+  <rect width="800" height="450" rx="32" fill="url(#bg)"/><circle cx="400" cy="211" r="139" fill="#faf9ff"/><path d="M400 92 424 179l89-39-47 86 90 34-93 20 13 94-76-57-76 57 13-94-93-20 90-34-47-86 89 39z" fill="#8b46e9"/><circle cx="400" cy="217" r="38" fill="#f5bd4f"/><rect x="219" y="333" width="362" height="57" rx="16" fill="#28213f" stroke="#8b46e9" stroke-width="2"/><text x="400" y="370" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="25" font-weight="700" letter-spacing="2">OTHER PARTY</text><text x="400" y="427" text-anchor="middle" fill="#ddd2f4" font-family="Arial,sans-serif" font-size="17" letter-spacing="4">NIGERIA 2027 ELECTION</text>
+</svg>
