@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { toast } from "sonner";
 import {
@@ -73,6 +73,7 @@ function SectionTitle({ children }: { children: ReactNode }) {
 function MarketHeading({ market }: { market: PredictionMarket }) {
   const [imageFailed, setImageFailed] = useState(false);
   const image = market.image || market.icon;
+  useEffect(() => setImageFailed(false), [image]);
   return (
     <div className="flex min-w-0 items-center gap-3">
       {image && !imageFailed ? (
@@ -628,17 +629,12 @@ function CreateMarketDialog({
         toast.error("No Nigeria markets found", { description: "Publish the starter pack first." });
         return;
       }
-      const marketsNeedingArtwork = nigeriaMarkets.filter((market) =>
-        !market.image || market.image.includes("/market-artwork/"),
-      );
-      if (marketsNeedingArtwork.length === 0) {
-        toast.success("All Nigeria markets already have artwork.");
-        return;
-      }
-      for (const market of marketsNeedingArtwork) {
+      // Always refresh the seeded markets. Their earlier artwork URLs may point
+      // to removed local assets, or to external images that no longer load.
+      for (const market of nigeriaMarkets) {
         await updateHawqMarketImage(adminKey, market.id, artworkForMarket(market));
       }
-      toast.success(`Updated images for ${marketsNeedingArtwork.length} Nigeria markets`, {
+      toast.success(`Updated images for ${nigeriaMarkets.length} Nigeria markets`, {
         description: "Each market now uses imagery for its specific party, institution, team, or event.",
       });
       await loadManagedMarkets();
