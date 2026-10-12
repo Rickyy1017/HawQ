@@ -74,16 +74,20 @@ function MarketHeading({ market }: { market: PredictionMarket }) {
   const [imageFailed, setImageFailed] = useState(false);
   const image = market.image || market.icon;
   return (
-    <div className="min-w-0 space-y-3">
+    <div className="flex min-w-0 items-center gap-3">
       {image && !imageFailed ? (
         <img
           src={image}
           alt=""
-          className="aspect-video w-full rounded-xl bg-secondary object-cover"
+          className="h-10 w-10 shrink-0 rounded-xl bg-secondary object-cover"
           onError={() => setImageFailed(true)}
         />
-      ) : null}
-      <p className="min-w-0 text-sm font-semibold leading-snug">
+      ) : (
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary text-primary">
+          <CircleDollarSign className="h-5 w-5" />
+        </span>
+      )}
+      <p className="min-w-0 flex-1 text-sm font-semibold leading-snug">
         {market.question}
       </p>
     </div>
@@ -92,28 +96,25 @@ function MarketHeading({ market }: { market: PredictionMarket }) {
 
 function artworkForMarket(market: HawqAdminMarket) {
   if (market.category === "politics") {
-    if (market.question.includes("APC")) return "/market-artwork/apc.svg";
-    if (market.question.includes("PDP")) return "/market-artwork/pdp.svg";
-    if (market.question.includes("outside the APC and PDP")) return "/market-artwork/other-party.svg";
-    if (market.question.includes("woman win a governorship")) return "/market-artwork/woman-governor.svg";
-    return "/market-artwork/inec-election.svg";
+    if (market.question.includes("outside the APC and PDP")) return "https://pbs.twimg.com/profile_images/1962564103559368705/P8L3ibiF.jpg";
+    if (market.question.includes("APC")) return "https://cdn.legit.ng/tags/600x600/a0da72ecbc113504.jpeg?v=1";
+    if (market.question.includes("PDP")) return "https://static.africa-press.net/nigeria/sites/3/2022/01/img-61e57a39f2ba1.jpg";
+    return "https://pbs.twimg.com/profile_images/1962564103559368705/P8L3ibiF.jpg";
   }
   if (market.category === "finance") {
-    if (market.question.startsWith("Will the NGX")) return "/market-artwork/ngx-market.svg";
-    if (market.question.startsWith("Will the CBN's official USD/NGN")) return "/market-artwork/naira-fx.svg";
-    return "/market-artwork/cbn-seal.svg";
+    if (market.question.startsWith("Will the NGX")) return "https://d1jcea4y7xhp7l.cloudfront.net/2021/04/NGX-Logo.png";
+    if (market.question.startsWith("Will the CBN's official USD/NGN")) return "https://s3-ap-southeast-1.amazonaws.com/mint-news/buy-nigerian-polymer-banknote.jpg";
+    return "https://getpocketmoni.com/images/cbn.png";
   }
   if (market.category === "sports") {
     return market.question.startsWith("Will Nigeria's Super Falcons")
-      ? "/market-artwork/super-falcons.svg"
-      : "/market-artwork/afcon-2027.svg";
+      ? "https://www.classicfootballshirts.co.uk/cdn-cgi/image/fit%3Dpad%2Cq%3D80%2Cw%3D1000%2Ch%3D1000%2Cf%3Dwebp/pub/media/catalog/product/1/0/100425505872-1_s3s2psavmapny8mg.jpg"
+      : "https://s.yimg.com/os/en/foot_africa_articles_352/de010fbfd162ad7e2408c01496943651";
   }
   return market.question.includes("Oscar")
-    ? "/market-artwork/oscar-awards.svg"
-    : "/market-artwork/grammy-awards.svg";
+    ? "https://cdns.klimg.com/kapanlagi.com/p/paging/academy-awards-ke-99-digelar-1-1-16e7c.jpg"
+    : "https://datg-cms-source-repo.s3.amazonaws.com/ABC/ComingSoon/grammys2027/277b20e8-2cf2-4f53-b3c4-edf0347073e9.jpg";
 }
-
-const publicAppUrl = import.meta.env.VITE_PUBLIC_APP_URL || "https://hawqq.vercel.app";
 
 function PriceButton({
   side,
@@ -627,17 +628,18 @@ function CreateMarketDialog({
         toast.error("No Nigeria markets found", { description: "Publish the starter pack first." });
         return;
       }
-      const marketsMissingArtwork = nigeriaMarkets.filter((market) => !market.image);
-      if (marketsMissingArtwork.length === 0) {
+      const marketsNeedingArtwork = nigeriaMarkets.filter((market) =>
+        !market.image || market.image.includes("/market-artwork/"),
+      );
+      if (marketsNeedingArtwork.length === 0) {
         toast.success("All Nigeria markets already have artwork.");
         return;
       }
-      for (const market of marketsMissingArtwork) {
-        const imageUrl = new URL(artworkForMarket(market), publicAppUrl).toString();
-        await updateHawqMarketImage(adminKey, market.id, imageUrl);
+      for (const market of marketsNeedingArtwork) {
+        await updateHawqMarketImage(adminKey, market.id, artworkForMarket(market));
       }
-      toast.success(`Artwork added to ${marketsMissingArtwork.length} Nigeria markets`, {
-        description: "Each market now has a matching HawQ illustration.",
+      toast.success(`Updated images for ${marketsNeedingArtwork.length} Nigeria markets`, {
+        description: "Each market now uses imagery for its specific party, institution, team, or event.",
       });
       await loadManagedMarkets();
       await onCreated();
@@ -755,10 +757,10 @@ function CreateMarketDialog({
             </Button>
           </div>
           <div className="space-y-2 rounded-xl bg-secondary/50 p-3">
-            <p className="text-sm font-medium">Matching HawQ artwork</p>
-            <p className="text-xs text-muted-foreground">Add original Nigeria, market, football, music, and film illustrations to the existing Nigeria markets.</p>
+            <p className="text-sm font-medium">Market-specific images</p>
+            <p className="text-xs text-muted-foreground">Use recognizable party, CBN, NGX, Super Falcons, AFCON, Grammy, and Oscars images on the matching markets.</p>
             <Button type="button" variant="outline" className="w-full" disabled={!adminKey || addingArtwork} onClick={addMatchingArtwork}>
-              {addingArtwork ? "Adding artwork…" : "Add artwork to Nigeria markets"}
+              {addingArtwork ? "Updating market images…" : "Update Nigeria market images"}
             </Button>
           </div>
           <div className="flex items-center justify-between gap-3">
