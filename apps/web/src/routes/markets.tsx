@@ -74,20 +74,16 @@ function MarketHeading({ market }: { market: PredictionMarket }) {
   const [imageFailed, setImageFailed] = useState(false);
   const image = market.image || market.icon;
   return (
-    <div className="flex min-w-0 items-center gap-3">
+    <div className="min-w-0 space-y-3">
       {image && !imageFailed ? (
         <img
           src={image}
           alt=""
-          className="h-10 w-10 shrink-0 rounded-xl bg-secondary object-cover"
+          className="aspect-video w-full rounded-xl bg-secondary object-cover"
           onError={() => setImageFailed(true)}
         />
-      ) : (
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary text-primary">
-          <CircleDollarSign className="h-5 w-5" />
-        </span>
-      )}
-      <p className="min-w-0 flex-1 text-sm font-semibold leading-snug">
+      ) : null}
+      <p className="min-w-0 text-sm font-semibold leading-snug">
         {market.question}
       </p>
     </div>
