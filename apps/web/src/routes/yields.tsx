@@ -3,9 +3,10 @@ import { GlassCard } from "@/components/GlassCard";
 import { Skeleton } from "@/components/Skeleton";
 import { useProtocols } from "@/hooks/useDefiData";
 import { fetchCoinGeckoLogos } from "@/lib/api/coinGecko";
+import { TokenLogo } from "@/components/markets/TokenLogo";
 import { formatUSD } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { Search, Sprout } from "lucide-react";
+import { Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
@@ -16,13 +17,13 @@ export const Route = createFileRoute("/yields")({
       {
         name: "description",
         content:
-          "Pool APYs and yield opportunities derived from indexed DeFi protocols.",
+          "Explore sample yield estimates across DeFi protocols.",
       },
       { property: "og:title", content: "Yields — HawQ" },
       {
         property: "og:description",
         content:
-          "Pool APYs and yield opportunities derived from indexed DeFi protocols.",
+          "Explore sample yield estimates across DeFi protocols.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -136,8 +137,7 @@ export default function YieldsPage() {
           <span className="text-gradient">Yields</span>
         </h1>
         <p className="text-sm text-muted-foreground">
-          Live pool APYs and yield opportunities across {pools.length} indexed
-          pools.
+          Demo yield estimates across {pools.length} sample pools.
         </p>
       </header>
 
@@ -190,21 +190,15 @@ export default function YieldsPage() {
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      {tokenLogos.data?.[
-                        p.symbol.split("-")[0].toUpperCase()
-                      ] ? (
-                        <img
-                          src={
-                            tokenLogos.data[
-                              p.symbol.split("-")[0].toUpperCase()
-                            ]
-                          }
-                          alt={`${p.symbol} logo`}
-                          className="h-5 w-5 rounded-full object-cover"
-                        />
-                      ) : (
-                        <Sprout className="h-4 w-4 text-primary" />
-                      )}
+                      <TokenLogo
+                        symbol={p.symbol.split("-")[0]}
+                        logoUrl={
+                          tokenLogos.data?.[
+                            p.symbol.split("-")[0].toUpperCase()
+                          ]
+                        }
+                        className="h-6 w-6"
+                      />
                       <div>
                         <p className="font-medium">{p.symbol}</p>
                         <p className="text-xs text-muted-foreground">

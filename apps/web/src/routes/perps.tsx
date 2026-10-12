@@ -11,7 +11,6 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { usePositions } from "../hooks/usePositions";
 import { getPerpMarkets } from "../lib/api/hawq";
-import { fetchCoinGeckoLogos } from "../lib/api/coinGecko";
 import { LiveCandleChart } from "../components/markets/LiveCandleChart";
 import { TokenLogo } from "../components/markets/TokenLogo";
 
@@ -53,17 +52,6 @@ function PerpsPage() {
     staleTime: 10_000,
     refetchOnWindowFocus: true,
     retry: 1,
-  });
-  const marketSymbols = (markets.data ?? []).map((item) =>
-    item.symbol.replace(/-PERP$/i, "").toUpperCase(),
-  );
-  const tokenLogos = useQuery({
-    queryKey: ["perp-token-logos", marketSymbols],
-    queryFn: () => fetchCoinGeckoLogos(marketSymbols),
-    enabled: marketSymbols.length > 0,
-    staleTime: 6 * 60 * 60_000,
-    gcTime: 24 * 60 * 60_000,
-    retry: 0,
   });
   const {
     positions,
@@ -132,7 +120,6 @@ function PerpsPage() {
 
   const selectedSymbol =
     market?.symbol.replace(/-PERP$/i, "").toUpperCase() ?? "";
-  const selectedLogo = tokenLogos.data?.[selectedSymbol];
 
   if (detailOpen && market) {
     return (
@@ -146,11 +133,7 @@ function PerpsPage() {
           <ArrowLeft className="h-4 w-4" /> All perpetuals
         </Button>
         <div className="flex items-center gap-3">
-          <TokenLogo
-            symbol={selectedSymbol}
-            logoUrl={selectedLogo}
-            className="h-11 w-11"
-          />
+          <TokenLogo symbol={selectedSymbol} className="h-11 w-11" />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-bold tracking-tight">
@@ -336,7 +319,6 @@ function PerpsPage() {
               const tokenSymbol = item.symbol
                 .replace(/-PERP$/i, "")
                 .toUpperCase();
-              const logo = tokenLogos.data?.[tokenSymbol];
               return (
                 <button
                   key={item.symbol}
@@ -344,7 +326,7 @@ function PerpsPage() {
                   onClick={() => selectMarket(item.symbol)}
                   className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-primary/5 active:bg-primary/10 sm:px-5"
                 >
-                  <TokenLogo symbol={tokenSymbol} logoUrl={logo} />
+                  <TokenLogo symbol={tokenSymbol} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       <span className="truncate text-sm font-semibold">

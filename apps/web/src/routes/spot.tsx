@@ -13,7 +13,6 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { usePositions } from "../hooks/usePositions";
 import { getSpotMarkets } from "../lib/api/hawq";
-import { fetchCoinGeckoLogos } from "../lib/api/coinGecko";
 
 export const Route = createFileRoute("/spot")({
   head: () => ({
@@ -53,15 +52,6 @@ function SpotPage() {
     staleTime: 10_000,
     refetchOnWindowFocus: true,
     retry: 1,
-  });
-  const symbols = (markets.data ?? []).map((item) => item.baseSymbol);
-  const logos = useQuery({
-    queryKey: ["spot-token-logos", symbols],
-    queryFn: () => fetchCoinGeckoLogos(symbols),
-    enabled: symbols.length > 0,
-    staleTime: 6 * 60 * 60_000,
-    gcTime: 24 * 60 * 60_000,
-    retry: 0,
   });
   const {
     positions,
@@ -122,7 +112,6 @@ function SpotPage() {
   };
 
   if (market) {
-    const logo = logos.data?.[market.baseSymbol];
     const change =
       market.previousPrice > 0
         ? ((market.markPrice - market.previousPrice) / market.previousPrice) *
@@ -139,11 +128,7 @@ function SpotPage() {
           <ArrowLeft className="h-4 w-4" /> All spot markets
         </Button>
         <div className="flex items-center gap-3">
-          <TokenLogo
-            symbol={market.baseSymbol}
-            logoUrl={logo}
-            className="h-11 w-11"
-          />
+          <TokenLogo symbol={market.baseSymbol} className="h-11 w-11" />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-bold tracking-tight">
@@ -329,7 +314,6 @@ function SpotPage() {
         ) : (
           <div className="divide-y divide-border/50">
             {filteredMarkets.map((item) => {
-              const logo = logos.data?.[item.baseSymbol];
               const change =
                 item.previousPrice > 0
                   ? ((item.markPrice - item.previousPrice) /
@@ -343,7 +327,7 @@ function SpotPage() {
                   onClick={() => openMarket(item.symbol)}
                   className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-primary/5 active:bg-primary/10 sm:px-5"
                 >
-                  <TokenLogo symbol={item.baseSymbol} logoUrl={logo} />
+                  <TokenLogo symbol={item.baseSymbol} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       <span className="truncate text-sm font-semibold">

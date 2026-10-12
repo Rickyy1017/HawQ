@@ -104,95 +104,9 @@ export const quantFundingRateSchema = z.object({
 export type QuantFundingRate = z.infer<typeof quantFundingRateSchema>;
 
 export async function getSpotMarkets(): Promise<SpotMarket[]> {
-  try {
-    const markets = await getHyperliquidSpotMarkets();
-    if (markets.length) return markets;
-  } catch {
-    // Fall back to Railway if direct exchange access is unavailable.
-  }
-  try {
-    return z
-      .array(spotMarketSchema)
-      .parse(await request("/api/quant/spot-markets"));
-  } catch {
-    throw new Error("Hyperliquid spot markets are temporarily unavailable.");
-  }
-}
-
-async function getHyperliquidSpotMarkets(): Promise<SpotMarket[]> {
-  const response = await fetch("https://api.hyperliquid.xyz/info", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ type: "spotMetaAndAssetCtxs" }),
-    signal: AbortSignal.timeout(15_000),
-  });
-  if (!response.ok)
-    throw new Error(`Hyperliquid spot markets failed (${response.status})`);
-
-  const [meta, contexts] = z
-    .tuple([
-      z.object({
-        tokens: z.array(z.object({ name: z.string() })),
-        universe: z.array(
-          z.object({
-            name: z.string().optional(),
-            tokens: z.tuple([z.number(), z.number()]),
-            index: z.number(),
-          }),
-        ),
-      }),
-      z.array(
-        z.object({
-          markPx: z.string().optional(),
-          midPx: z.string().nullable().optional(),
-          prevDayPx: z.string(),
-          dayNtlVlm: z.string(),
-        }),
-      ),
-    ])
-    .parse(await response.json());
-
-  return meta.universe
-    .map((pair) => {
-      const [baseIndex, quoteIndex] = pair.tokens;
-      const rawBaseSymbol = meta.tokens[baseIndex]?.name;
-      const quoteSymbol = meta.tokens[quoteIndex]?.name;
-      const context = contexts[pair.index];
-      const markPrice = Number(context?.midPx ?? context?.markPx);
-      const previousPrice = Number(context?.prevDayPx);
-      const dayVolume = Number(context?.dayNtlVlm);
-      if (
-        !rawBaseSymbol ||
-        quoteSymbol !== "USDC" ||
-        !context ||
-        !Number.isFinite(markPrice) ||
-        markPrice <= 0 ||
-        !Number.isFinite(previousPrice) ||
-        !Number.isFinite(dayVolume)
-      )
-        return null;
-
-      const baseSymbol =
-        rawBaseSymbol === "UBTC"
-          ? "BTC"
-          : rawBaseSymbol === "UETH"
-            ? "ETH"
-            : rawBaseSymbol === "USOL"
-              ? "SOL"
-              : rawBaseSymbol;
-      const symbol = `${baseSymbol}/${quoteSymbol}`;
-      return {
-        symbol,
-        candleSymbol: pair.name === "PURR/USDC" ? pair.name : `@${pair.index}`,
-        baseSymbol,
-        quoteSymbol,
-        markPrice,
-        previousPrice,
-        dayVolume,
-      };
-    })
-    .filter((market): market is SpotMarket => market !== null)
-    .sort((a, b) => b.dayVolume - a.dayVolume);
+  return z
+    .array(spotMarketSchema)
+    .parse(await request("/api/quant/spot-markets"));
 }
 
 export type CandleInterval = "1m" | "5m" | "15m" | "1h" | "4h" | "1d";

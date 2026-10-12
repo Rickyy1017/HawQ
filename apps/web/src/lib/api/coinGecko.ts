@@ -10,6 +10,35 @@ type CoinMarket = {
   market_cap_rank?: number | null;
 };
 
+const COINGECKO_ID_BY_SYMBOL: Record<string, string> = {
+  AAVE: "aave",
+  ADA: "cardano",
+  AVAX: "avalanche-2",
+  BNB: "binancecoin",
+  BTC: "bitcoin",
+  DAI: "dai",
+  DOGE: "dogecoin",
+  ETH: "ethereum",
+  HYPE: "hyperliquid",
+  GHO: "gho",
+  LINK: "chainlink",
+  PEPE: "pepe",
+  PUMP: "pump-fun",
+  RETH: "rocket-pool-eth",
+  SOL: "solana",
+  STRK: "starknet",
+  STETH: "staked-ether",
+  SUI: "sui",
+  USDC: "usd-coin",
+  USDT: "tether",
+  WBTC: "wrapped-bitcoin",
+  W: "wormhole",
+  ENA: "ethena",
+  ONDO: "ondo-finance",
+  ZRO: "layerzero",
+  XRP: "ripple",
+};
+
 const IDS = {
   bitcoin: "BTC",
   ethereum: "ETH",
@@ -49,7 +78,7 @@ export async function fetchCoinGeckoPrices(): Promise<PricePoint[]> {
   });
 }
 
-/** Loads ranked CoinGecko pages and returns logos matching requested tickers. */
+/** Loads exact CoinGecko token IDs for known symbols; unknowns use TokenLogo's icon fallback. */
 export async function fetchCoinGeckoLogos(
   symbols: string[],
 ): Promise<Record<string, string>> {
@@ -58,35 +87,35 @@ export async function fetchCoinGeckoLogos(
     .sort();
   if (!normalized.length) return {};
 
-  const marketPages = await cached(
-    "cg:logo-market-pages-1-4",
-    6 * 60 * 60_000,
-    async () => {
-      const pages = await Promise.allSettled(
-        [1, 2, 3, 4].map((page) => {
+  const symbolIds = normalized.flatMap((symbol) => {
+    const id = COINGECKO_ID_BY_SYMBOL[symbol];
+    return id ? [[symbol, id] as const] : [];
+  });
+  const ids = symbolIds.map(([, id]) => id);
+  const exactLogos: Record<string, string> = {};
+  if (ids.length) {
+    try {
+      const coins = await cached(
+        `cg:logos:${ids.slice().sort().join(",")}`,
+        6 * 60 * 60_000,
+        () => {
           const params = new URLSearchParams({
             vs_currency: "usd",
-            order: "market_cap_desc",
-            per_page: "250",
-            page: String(page),
-            sparkline: "false",
+            ids: ids.join(","),
           });
           return safeFetch<CoinMarket[]>(
             `https://api.coingecko.com/api/v3/coins/markets?${params}`,
           );
-        }),
+        },
       );
-      return pages.flatMap((page) =>
-        page.status === "fulfilled" ? page.value : [],
-      );
-    },
-  );
-  const logos: Record<string, string> = {};
-  for (const coin of marketPages) {
-    const symbol = coin.symbol.toUpperCase();
-    if (normalized.includes(symbol) && coin.image && !logos[symbol]) {
-      logos[symbol] = coin.image;
+      for (const coin of coins) {
+        const symbol = symbolIds.find(([, id]) => id === coin.id)?.[0];
+        if (symbol && coin.image) exactLogos[symbol] = coin.image;
+      }
+    } catch {
+      // Fall through to the ranked list lookup when the exact lookup is unavailable.
     }
   }
-  return logos;
+
+  return exactLogos;
 }

@@ -3,19 +3,41 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
-import { ChevronRight, CircleDollarSign, Globe2, Search, Trophy } from "lucide-react";
+import {
+  ChevronRight,
+  CircleDollarSign,
+  Globe2,
+  Search,
+  ShieldCheck,
+  Trophy,
+  WalletCards,
+} from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { usePositions } from "../hooks/usePositions";
 import { getPredictionMarkets, type PredictionMarket } from "../lib/api/hawq";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../components/ui/dialog";
 
 export const Route = createFileRoute("/markets")({
   head: () => ({
     meta: [
       { title: "Predictions — HawQ" },
-      { name: "description", content: "Explore live Polymarket prediction markets." },
+      {
+        name: "description",
+        content: "Explore live Polymarket prediction markets.",
+      },
       { property: "og:title", content: "Predictions — HawQ" },
-      { property: "og:description", content: "Explore live Polymarket prediction markets." },
+      {
+        property: "og:description",
+        content: "Explore live Polymarket prediction markets.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -24,25 +46,69 @@ export const Route = createFileRoute("/markets")({
 });
 
 const topics = ["Trump", "Fed", "Nobel Prize", "Midterms", "Bitcoin"];
-const compactVolume = (volume: number) => Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(volume);
+const compactVolume = (volume: number) =>
+  Intl.NumberFormat("en", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(volume);
 
 function SectionTitle({ children }: { children: ReactNode }) {
-  return <h2 className="flex items-center gap-1 text-base font-semibold">{children}<ChevronRight className="h-4 w-4 text-muted-foreground" /></h2>;
+  return (
+    <h2 className="flex items-center gap-1 text-base font-semibold">
+      {children}
+      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+    </h2>
+  );
 }
 
 function MarketHeading({ market }: { market: PredictionMarket }) {
   const [imageFailed, setImageFailed] = useState(false);
   const image = market.image || market.icon;
-  return <div className="flex min-w-0 items-center gap-3">
-    {image && !imageFailed ? <img src={image} alt="" className="h-10 w-10 shrink-0 rounded-xl bg-secondary object-cover" onError={() => setImageFailed(true)} /> : <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary text-primary"><CircleDollarSign className="h-5 w-5" /></span>}
-    <p className="min-w-0 flex-1 text-sm font-semibold leading-snug">{market.question}</p>
-  </div>;
+  return (
+    <div className="flex min-w-0 items-center gap-3">
+      {image && !imageFailed ? (
+        <img
+          src={image}
+          alt=""
+          className="h-10 w-10 shrink-0 rounded-xl bg-secondary object-cover"
+          onError={() => setImageFailed(true)}
+        />
+      ) : (
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary text-primary">
+          <CircleDollarSign className="h-5 w-5" />
+        </span>
+      )}
+      <p className="min-w-0 flex-1 text-sm font-semibold leading-snug">
+        {market.question}
+      </p>
+    </div>
+  );
 }
 
-function PriceButton({ side, price, onClick, disabled, compact = false }: { side: string; price: number; onClick: () => void; disabled: boolean; compact?: boolean }) {
-  return <Button variant="secondary" size="sm" disabled={disabled} onClick={onClick} className={`${compact ? "h-7 px-2" : "h-9"} rounded-lg ${side === "YES" ? "bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-300" : "bg-rose-500/10 text-rose-700 hover:bg-rose-500/20 dark:text-rose-300"}`}>
-    {side} {Math.round(price * 100)}¢
-  </Button>;
+function PriceButton({
+  side,
+  price,
+  onClick,
+  disabled,
+  compact = false,
+}: {
+  side: string;
+  price: number;
+  onClick: () => void;
+  disabled: boolean;
+  compact?: boolean;
+}) {
+  return (
+    <Button
+      variant="secondary"
+      size="sm"
+      disabled={disabled}
+      onClick={onClick}
+      className={`${compact ? "h-7 px-2" : "h-9"} rounded-lg ${side === "YES" ? "bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-300" : "bg-rose-500/10 text-rose-700 hover:bg-rose-500/20 dark:text-rose-300"}`}
+    >
+      {side} {Math.round(price * 100)}¢
+    </Button>
+  );
 }
 
 function MarketsPage() {
@@ -50,6 +116,10 @@ function MarketsPage() {
   const [region, setRegion] = useState("all");
   const [size, setSize] = useState("100");
   const [pending, setPending] = useState<string | null>(null);
+  const [betSelection, setBetSelection] = useState<{
+    market: PredictionMarket;
+    side: "yes" | "no";
+  } | null>(null);
   const [topic, setTopic] = useState("");
   const [search, setSearch] = useState("");
   const markets = useQuery({
@@ -69,80 +139,378 @@ function MarketsPage() {
   });
   const { log } = usePositions();
   const allMarkets = markets.data ?? [];
-  const sportsMarkets = (liveMarkets.data ?? []).filter((market) => market.category === "sports").slice(0, 6);
+  const sportsMarkets = (liveMarkets.data ?? [])
+    .filter((market) => market.category === "sports")
+    .slice(0, 6);
   const visibleMarkets = allMarkets.filter((market) => {
     const text = market.question.toLowerCase();
-    return (!topic || text.includes(topic.toLowerCase())) && (!search || text.includes(search.toLowerCase()));
+    return (
+      (!topic || text.includes(topic.toLowerCase())) &&
+      (!search || text.includes(search.toLowerCase()))
+    );
   });
 
   const buy = async (market: PredictionMarket, side: "yes" | "no") => {
     const usd = Number(size);
     if (!Number.isFinite(usd) || usd <= 0) {
       toast.error("Enter a valid USD size");
-      return;
+      return false;
     }
     setPending(market.id);
     try {
-      await log({ product: "prediction", venue: "polymarket", symbolOrMarket: market.id, side, sizeUsd: usd, entryPrice: side === "yes" ? market.yesPrice : market.noPrice, isTestnet: true });
-      toast.success(`${side.toUpperCase()} demo position logged`, { description: `${market.question} · $${usd.toLocaleString()} · simulated, not a real trade.` });
+      await log({
+        product: "prediction",
+        venue: "polymarket",
+        symbolOrMarket: market.id,
+        side,
+        sizeUsd: usd,
+        entryPrice: side === "yes" ? market.yesPrice : market.noPrice,
+        isTestnet: true,
+      });
+      toast.success(`${side.toUpperCase()} demo position logged`, {
+        description: `${market.question} · $${usd.toLocaleString()} · simulated, not a real trade.`,
+      });
+      return true;
     } catch {
       toast.error("Could not log the demo position. Please try again.");
+      return false;
     } finally {
       setPending(null);
     }
   };
 
-  return <main className="mx-auto w-full space-y-7 py-4 sm:py-6">
-    <header className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-bold tracking-tight">Predictions</h1><p className="mt-1 text-xs text-muted-foreground">Explore what the world is predicting</p></div>
-        <Link to="/my-positions" className="rounded-lg px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10">Positions</Link>
-      </div>
-      <label className="relative block"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search predictions" className="h-10 w-full rounded-xl border border-border bg-card pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary/50" /></label>
-    </header>
+  const confirmBet = async () => {
+    if (!betSelection) return;
+    if (await buy(betSelection.market, betSelection.side))
+      setBetSelection(null);
+  };
+  const selectedPrice = betSelection
+    ? betSelection.side === "yes"
+      ? betSelection.market.yesPrice
+      : betSelection.market.noPrice
+    : 0;
+  const stake = Number(size);
+  const estimatedShares =
+    selectedPrice > 0 && Number.isFinite(stake) && stake > 0
+      ? stake / selectedPrice
+      : 0;
 
-    {sportsMarkets.length > 0 && <section className="space-y-3">
-      <SectionTitle>Popular sports</SectionTitle>
-      <div className="flex snap-x gap-3 overflow-x-auto pb-2">
-        {sportsMarkets.map((market) => <article key={market.id} className="w-[min(82vw,330px)] shrink-0 snap-start rounded-2xl border border-border/70 bg-card p-4 shadow-sm">
-          <MarketHeading market={market} />
-          <div className="my-4 flex items-center justify-between text-xs text-muted-foreground"><span className="capitalize">{market.category}</span><span>{compactVolume(market.volume)} vol.</span></div>
-          <div className="grid grid-cols-2 gap-2"><PriceButton side="YES" price={market.yesPrice} onClick={() => buy(market, "yes")} disabled={pending !== null} /><PriceButton side="NO" price={market.noPrice} onClick={() => buy(market, "no")} disabled={pending !== null} /></div>
-        </article>)}
-      </div>
-    </section>}
-
-    <section className="space-y-3">
-      <SectionTitle>Categories</SectionTitle>
-      <div className="grid grid-cols-3 gap-2">
-        {([["politics", "Politics", Globe2], ["sports", "Sports", Trophy], ["finance", "Crypto", CircleDollarSign]] as const).map(([value, label, Icon]) => <button key={value} onClick={() => { setCategory(value); setTopic(""); }} className={`flex min-h-20 flex-col items-center justify-center gap-2 rounded-xl border p-3 text-xs font-medium transition ${category === value ? "border-primary/40 bg-primary/10" : "border-transparent bg-secondary/60 hover:bg-secondary"}`}><Icon className="h-4 w-4" />{label}</button>)}
-      </div>
-    </section>
-
-    <section className="space-y-3">
-      <SectionTitle>Popular today</SectionTitle>
-      <div className="flex flex-wrap gap-2">{topics.map((item) => <button key={item} onClick={() => { setTopic(topic === item ? "" : item); setCategory("all"); }} className={`rounded-full px-3 py-1.5 text-xs ${topic === item ? "bg-primary text-primary-foreground" : "bg-secondary/70 hover:bg-secondary"}`}>{item}</button>)}</div>
-    </section>
-
-    <section className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <SectionTitle>Trending</SectionTitle>
-        <div className="flex items-center gap-2">
-          <select aria-label="Region" value={region} onChange={(event) => setRegion(event.target.value)} className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs"><option value="all">All regions</option><option value="nigeria">Nigeria</option></select>
-          <Input aria-label="Position size in USD" type="number" min="0.01" step="any" value={size} onChange={(event) => setSize(event.target.value)} className="h-8 w-24 text-xs" />
-        </div>
-      </div>
-      {markets.isLoading ? <p className="py-10 text-center text-muted-foreground">Loading markets…</p> : markets.isError ? <p className="py-10 text-center text-destructive">Markets unavailable. Please try again later.</p> : !visibleMarkets.length ? <p className="py-10 text-center text-muted-foreground">No markets found for this filter.</p> : <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {visibleMarkets.map((market) => <article key={market.id} className="rounded-2xl border border-border/60 bg-card p-3.5 shadow-sm sm:p-4">
-          <MarketHeading market={market} />
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <div className="flex items-center justify-between gap-2 rounded-lg bg-secondary/40 px-2 py-1.5"><span className="text-xs text-muted-foreground">Yes · {Math.round(market.yesPrice * 100)}%</span><PriceButton compact side="YES" price={market.yesPrice} onClick={() => buy(market, "yes")} disabled={pending !== null} /></div>
-            <div className="flex items-center justify-between gap-2 rounded-lg bg-secondary/40 px-2 py-1.5"><span className="text-xs text-muted-foreground">No · {Math.round(market.noPrice * 100)}%</span><PriceButton compact side="NO" price={market.noPrice} onClick={() => buy(market, "no")} disabled={pending !== null} /></div>
+  return (
+    <main className="mx-auto w-full space-y-7 py-4 sm:py-6">
+      <header className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Predictions</h1>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Explore what the world is predicting
+            </p>
           </div>
-          <div className="mt-3 flex items-center justify-end gap-1 text-[11px] text-muted-foreground">${compactVolume(market.volume)} Vol. <ChevronRight className="h-3 w-3" /></div>
-        </article>)}
-      </div>}
-    </section>
-    <Link to="/my-positions" className="inline-block text-sm text-primary hover:underline">View all demo positions →</Link>
-  </main>;
+          <Link
+            to="/my-positions"
+            className="rounded-lg px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10"
+          >
+            Positions
+          </Link>
+        </div>
+        <label className="relative block">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search predictions"
+            className="h-10 w-full rounded-xl border border-border bg-card pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary/50"
+          />
+        </label>
+      </header>
+
+      {sportsMarkets.length > 0 && (
+        <section className="space-y-3">
+          <SectionTitle>Popular sports</SectionTitle>
+          <div className="flex snap-x gap-3 overflow-x-auto pb-2">
+            {sportsMarkets.map((market) => (
+              <article
+                key={market.id}
+                className="w-[min(82vw,330px)] shrink-0 snap-start rounded-2xl border border-border/70 bg-card p-4 shadow-sm"
+              >
+                <MarketHeading market={market} />
+                <div className="my-4 flex items-center justify-between text-xs text-muted-foreground">
+                  <span className="capitalize">{market.category}</span>
+                  <span>{compactVolume(market.volume)} vol.</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <PriceButton
+                    side="YES"
+                    price={market.yesPrice}
+                    onClick={() => setBetSelection({ market, side: "yes" })}
+                    disabled={pending !== null}
+                  />
+                  <PriceButton
+                    side="NO"
+                    price={market.noPrice}
+                    onClick={() => setBetSelection({ market, side: "no" })}
+                    disabled={pending !== null}
+                  />
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="space-y-3">
+        <SectionTitle>Categories</SectionTitle>
+        <div className="grid grid-cols-3 gap-2">
+          {(
+            [
+              ["politics", "Politics", Globe2],
+              ["sports", "Sports", Trophy],
+              ["finance", "Crypto", CircleDollarSign],
+            ] as const
+          ).map(([value, label, Icon]) => (
+            <button
+              key={value}
+              onClick={() => {
+                setCategory(value);
+                setTopic("");
+              }}
+              className={`flex min-h-20 flex-col items-center justify-center gap-2 rounded-xl border p-3 text-xs font-medium transition ${category === value ? "border-primary/40 bg-primary/10" : "border-transparent bg-secondary/60 hover:bg-secondary"}`}
+            >
+              <Icon className="h-4 w-4" />
+              {label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <SectionTitle>Popular today</SectionTitle>
+        <div className="flex flex-wrap gap-2">
+          {topics.map((item) => (
+            <button
+              key={item}
+              onClick={() => {
+                setTopic(topic === item ? "" : item);
+                setCategory("all");
+              }}
+              className={`rounded-full px-3 py-1.5 text-xs ${topic === item ? "bg-primary text-primary-foreground" : "bg-secondary/70 hover:bg-secondary"}`}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <SectionTitle>Trending</SectionTitle>
+          <div className="flex items-center gap-2">
+            <select
+              aria-label="Region"
+              value={region}
+              onChange={(event) => setRegion(event.target.value)}
+              className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs"
+            >
+              <option value="all">All regions</option>
+              <option value="nigeria">Nigeria</option>
+            </select>
+          </div>
+        </div>
+        {markets.isLoading ? (
+          <p className="py-10 text-center text-muted-foreground">
+            Loading markets…
+          </p>
+        ) : markets.isError ? (
+          <p className="py-10 text-center text-destructive">
+            Markets unavailable. Please try again later.
+          </p>
+        ) : !visibleMarkets.length ? (
+          <p className="py-10 text-center text-muted-foreground">
+            No markets found for this filter.
+          </p>
+        ) : (
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {visibleMarkets.map((market) => (
+              <article
+                key={market.id}
+                className="rounded-2xl border border-border/60 bg-card p-3.5 shadow-sm sm:p-4"
+              >
+                <MarketHeading market={market} />
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <div className="flex items-center justify-between gap-2 rounded-lg bg-secondary/40 px-2 py-1.5">
+                    <span className="text-xs text-muted-foreground">
+                      Yes · {Math.round(market.yesPrice * 100)}%
+                    </span>
+                    <PriceButton
+                      compact
+                      side="YES"
+                      price={market.yesPrice}
+                      onClick={() => setBetSelection({ market, side: "yes" })}
+                      disabled={pending !== null}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between gap-2 rounded-lg bg-secondary/40 px-2 py-1.5">
+                    <span className="text-xs text-muted-foreground">
+                      No · {Math.round(market.noPrice * 100)}%
+                    </span>
+                    <PriceButton
+                      compact
+                      side="NO"
+                      price={market.noPrice}
+                      onClick={() => setBetSelection({ market, side: "no" })}
+                      disabled={pending !== null}
+                    />
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center justify-end gap-1 text-[11px] text-muted-foreground">
+                  ${compactVolume(market.volume)} Vol.{" "}
+                  <ChevronRight className="h-3 w-3" />
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+      <Link
+        to="/my-positions"
+        className="inline-block text-sm text-primary hover:underline"
+      >
+        View all demo positions →
+      </Link>
+      <Dialog
+        open={betSelection !== null}
+        onOpenChange={(open) => {
+          if (!open && pending === null) setBetSelection(null);
+        }}
+      >
+        <DialogContent className="max-h-[90dvh] max-w-md overflow-y-auto rounded-2xl p-5 sm:p-6">
+          {betSelection && (
+            <>
+              <DialogHeader className="pr-7 text-left">
+                <DialogTitle className="text-xl">
+                  Review your prediction
+                </DialogTitle>
+                <DialogDescription>
+                  Check your pick and amount before confirming.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="rounded-xl border border-border/70 bg-secondary/30 p-3.5">
+                <MarketHeading market={betSelection.market} />
+                <div className="mt-3 flex items-center justify-between gap-3 border-t border-border/60 pt-3 text-sm">
+                  <span className="text-muted-foreground">Your pick</span>
+                  <span
+                    className={`font-semibold ${betSelection.side === "yes" ? "text-emerald-600 dark:text-emerald-300" : "text-rose-600 dark:text-rose-300"}`}
+                  >
+                    {betSelection.side.toUpperCase()} at{" "}
+                    {Math.round(selectedPrice * 100)}¢
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="prediction-stake"
+                  className="text-sm font-medium"
+                >
+                  Amount to bet
+                </label>
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    $
+                  </span>
+                  <Input
+                    id="prediction-stake"
+                    type="number"
+                    min="1"
+                    step="any"
+                    inputMode="decimal"
+                    value={size}
+                    onChange={(event) => setSize(event.target.value)}
+                    className="h-12 pl-8 text-lg font-semibold tabular-nums"
+                    autoFocus
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {[10, 25, 50, 100].map((amount) => (
+                    <button
+                      key={amount}
+                      type="button"
+                      onClick={() => setSize(String(amount))}
+                      className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${size === String(amount) ? "border-primary/50 bg-primary/10 text-foreground" : "border-border bg-background text-muted-foreground hover:bg-secondary"}`}
+                    >
+                      ${amount}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2 rounded-xl bg-secondary/40 p-3.5 text-sm">
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">
+                    Estimated shares
+                  </span>
+                  <span className="font-medium tabular-nums">
+                    {estimatedShares.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">
+                    Payout if correct
+                  </span>
+                  <span className="font-semibold tabular-nums">
+                    ${estimatedShares.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-4 border-t border-border/60 pt-2">
+                  <span className="text-muted-foreground">
+                    Potential profit
+                  </span>
+                  <span className="font-semibold tabular-nums text-success">
+                    $
+                    {Math.max(
+                      estimatedShares - (Number.isFinite(stake) ? stake : 0),
+                      0,
+                    ).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex gap-2 rounded-xl border border-warning/30 bg-warning/5 p-3 text-xs leading-relaxed text-muted-foreground">
+                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                <p>
+                  This is a simulated demo bet. HawQ records a paper position
+                  only; it does not place a Polymarket order or request a wallet
+                  signature.
+                </p>
+              </div>
+
+              <DialogFooter className="gap-2 sm:flex-col-reverse sm:space-x-0">
+                <Button
+                  variant="outline"
+                  onClick={() => setBetSelection(null)}
+                  disabled={pending !== null}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={confirmBet}
+                  disabled={
+                    pending !== null ||
+                    !Number.isFinite(stake) ||
+                    stake < 1 ||
+                    selectedPrice <= 0
+                  }
+                >
+                  <WalletCards className="h-4 w-4" />
+                  {pending
+                    ? "Recording demo bet…"
+                    : `Confirm demo ${betSelection.side.toUpperCase()}`}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </main>
+  );
 }

@@ -12,15 +12,13 @@ import type { ProtocolTVL, ProtocolEvent, WalletBalance } from "../types";
 
 const QO = { staleTime: 5 * 60_000, gcTime: 30 * 60_000, retry: 1 } as const;
 
-/** Live DeFiLlama protocol list merged with backend-only protocols when available. */
+/** Load from the first healthy live source instead of waiting on them sequentially. */
 export function useProtocols() {
   return useQuery({
     queryKey: ["protocols"],
     queryFn: async (): Promise<ProtocolTVL[]> => {
-      let backendProtocols: ProtocolTVL[] = [];
-      try {
-        const rows = await getProtocols();
-        backendProtocols = rows.map((p) => ({
+      const backend = getProtocols().then((rows) => {
+        const protocols = rows.map((p) => ({
           name: p.name,
           slug: p.slug,
           chain: p.chain,
@@ -32,26 +30,20 @@ export function useProtocols() {
           logo: p.logo ?? undefined,
           mcap: p.mcap ?? undefined,
         }));
-      } catch {
-        // Keep any backend data as a fallback if the live source is unavailable.
-      }
+        if (!protocols.length) throw new Error("Backend returned no protocols");
+        return protocols;
+      });
+      const live = fetchDefiLlamaTVL().then((rows) => {
+        const protocols = normalizeProtocols(rows);
+        if (!protocols.length) throw new Error("DeFiLlama returned no protocols");
+        return protocols;
+      });
 
       try {
-        const liveRows = await fetchDefiLlamaTVL();
-        if (liveRows.length) {
-          const merged = new Map(
-            normalizeProtocols(liveRows).map((protocol) => [protocol.slug, protocol]),
-          );
-          for (const protocol of backendProtocols) {
-            if (!merged.has(protocol.slug)) merged.set(protocol.slug, protocol);
-          }
-          return [...merged.values()];
-        }
+        return await Promise.any([backend, live]);
       } catch {
-        // Use stored or demo data if DeFiLlama cannot be reached.
+        return MOCK_PROTOCOLS;
       }
-
-      return backendProtocols.length ? backendProtocols : MOCK_PROTOCOLS;
     },
     ...QO,
   });

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-type LogoSource = "market" | "icons" | "fallback";
+type LogoSource = "market" | "hyperliquid" | "icons" | "fallback";
 
 function iconSymbol(symbol: string) {
   const ticker = symbol
@@ -25,7 +25,7 @@ export function TokenLogo({
   className?: string;
 }) {
   const [source, setSource] = useState<LogoSource>(
-    logoUrl ? "market" : "icons",
+    logoUrl ? "market" : "hyperliquid",
   );
   const ticker = iconSymbol(symbol);
   const src =
@@ -33,10 +33,12 @@ export function TokenLogo({
       ? logoUrl
       : source === "icons"
         ? `https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${ticker.toLowerCase()}.png`
-        : undefined;
+        : source === "hyperliquid"
+          ? `https://app.hyperliquid.xyz/coins/${ticker}.svg`
+          : undefined;
 
   useEffect(() => {
-    setSource(logoUrl ? "market" : "icons");
+    setSource(logoUrl ? "market" : "hyperliquid");
   }, [logoUrl, symbol]);
 
   return (
@@ -52,7 +54,11 @@ export function TokenLogo({
           loading="lazy"
           onError={() =>
             setSource((current) =>
-              current === "market" ? "icons" : "fallback",
+              current === "market"
+                ? "hyperliquid"
+                : current === "hyperliquid"
+                  ? "icons"
+                  : "fallback",
             )
           }
         />
