@@ -35,7 +35,7 @@ The root Bun workspace includes packages and backend services. The web app is ma
 | Total TVL history | DeFiLlama | Stored by the ingestion service and served by the API. |
 | Spot prices and token logos | CoinGecko | Requested by the web app; a smaller price feed is also ingested for backend snapshots. |
 | Perpetual markets | Hyperliquid public info API | Ingested for dashboard data; orders are separately signed client-side on testnet. |
-| Prediction markets | Polymarket Gamma API | Ingested in pages of up to 100 markets, including market or parent-event artwork when available. |
+| Prediction markets | Polymarket Gamma API and HawQ's own PostgreSQL market table | Polymarket markets are ingested with their artwork; HawQ markets are admin-created, Nigeria-tagged play-money forecasts with source-backed resolution. Crowd odds are derived from simulated picks. |
 | Chain and wallet data | Public Solana/EVM JSON-RPC; Blockchair for Zcash | Network metrics and supported public wallet snapshots are stored and returned by the API. |
 | Spot oracle prices | Chainlink Functions integration in the web app | Used where configured and available, with CoinGecko as the displayed fallback. |
 
@@ -90,6 +90,7 @@ Open the local URL printed by Vite. The API health check is GET http://localhost
 | DATABASE_URL | PostgreSQL connection shared by the API and ingestion service | Local TimescaleDB URL in .env.example |
 | PORT | API listen port | 4000 |
 | PGSSL | Enable SSL for the database migration runner | Set to true for hosted databases that require SSL |
+| HAWQ_MARKETS_ADMIN_KEY | Protect HawQ market create/resolve endpoints | Set a long random secret on the API service; do not expose it as a VITE variable |
 | VITE_HAWQ_API_URL | API base URL for the web app | http://localhost:4000 |
 | SOLANA_RPC_URL | Solana JSON-RPC endpoint | Public Solana mainnet endpoint |
 | BASE_RPC_URL | Base JSON-RPC endpoint | Public Base endpoint |
@@ -116,11 +117,13 @@ All API routes other than /health are prefixed with /api.
 | GET | /api/perps/markets | Latest Hyperliquid perpetual market snapshot by symbol |
 | GET | /api/perps/markets/:symbol/history | Historical perpetual market snapshots |
 | GET | /api/quant/candles | Historical Hyperliquid candles for Quant backtests |
-| GET | /api/predictions/markets | Latest prediction markets with available artwork |
+| GET | /api/predictions/markets | Latest Polymarket markets and open HawQ markets; supports category and region filters |
+| POST | /api/predictions/markets | Create a Nigeria play-money market (requires `x-hawq-admin-key`) |
+| POST | /api/predictions/markets/:id/resolve | Resolve a HawQ market as yes/no (requires `x-hawq-admin-key`) |
 | POST | /api/positions | Validate and store a simulated or testnet position record |
 | GET | /api/positions?wallet=:address | List recent position records, optionally filtered by wallet |
 
-The predictions endpoint accepts optional category and region query parameters, for example /api/predictions/markets?category=sports&region=nigeria. The API currently applies a 120-request-per-minute rate limit and permissive CORS configuration; review both before exposing it to a broader production use case.
+The predictions endpoint accepts optional category and region query parameters, for example /api/predictions/markets?category=sports&region=nigeria. `POST /api/predictions/markets` creates a HawQ market and `POST /api/predictions/markets/:id/resolve` resolves one; both require the `x-hawq-admin-key` header matching `HAWQ_MARKETS_ADMIN_KEY`. Set a long random secret in the API service environment before enabling market creation. HawQ markets accept an HTTPS image URL, a close date, and a public resolution source. User picks are simulated only; the displayed crowd probability is based on those simulated positions, with a neutral 50/50 prior until picks arrive. The API currently applies a 120-request-per-minute rate limit and permissive CORS configuration; review both before exposing it to a broader production use case.
 
 ## Deployment
 

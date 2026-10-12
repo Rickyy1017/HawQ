@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import type { ReactNode } from "react";
+import type { FormEvent, ReactNode } from "react";
 import { toast } from "sonner";
 import {
   ChevronRight,
   CircleDollarSign,
   Globe2,
+  Plus,
   Search,
   ShieldCheck,
   Trophy,
@@ -15,7 +16,7 @@ import {
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { usePositions } from "../hooks/usePositions";
-import { getPredictionMarkets, type PredictionMarket } from "../lib/api/hawq";
+import { createHawqMarket, getPredictionMarkets, type PredictionMarket } from "../lib/api/hawq";
 import {
   Dialog,
   DialogContent,
@@ -31,12 +32,12 @@ export const Route = createFileRoute("/markets")({
       { title: "Predictions — HawQ" },
       {
         name: "description",
-        content: "Explore live Polymarket prediction markets.",
+        content: "Explore HawQ community forecasts and live Polymarket markets.",
       },
       { property: "og:title", content: "Predictions — HawQ" },
       {
         property: "og:description",
-        content: "Explore live Polymarket prediction markets.",
+        content: "Explore HawQ community forecasts and live Polymarket markets.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -45,7 +46,8 @@ export const Route = createFileRoute("/markets")({
   component: MarketsPage,
 });
 
-const topics = ["Trump", "Fed", "Nobel Prize", "Midterms", "Bitcoin"];
+const globalTopics = ["Trump", "Fed", "Nobel Prize", "Midterms", "Bitcoin"];
+const nigeriaTopics = ["Presidency", "Naira", "Super Eagles", "Nollywood"];
 const compactVolume = (volume: number) =>
   Intl.NumberFormat("en", {
     notation: "compact",
@@ -113,7 +115,8 @@ function PriceButton({
 
 function MarketsPage() {
   const [category, setCategory] = useState<string>("all");
-  const [region, setRegion] = useState("all");
+  const [region, setRegion] = useState("nigeria");
+  const [createOpen, setCreateOpen] = useState(false);
   const [size, setSize] = useState("100");
   const [pending, setPending] = useState<string | null>(null);
   const [betSelection, setBetSelection] = useState<{
@@ -122,6 +125,7 @@ function MarketsPage() {
   } | null>(null);
   const [topic, setTopic] = useState("");
   const [search, setSearch] = useState("");
+  const queryClient = useQueryClient();
   const markets = useQuery({
     queryKey: ["hawq-predictions-markets", category, region],
     queryFn: () => getPredictionMarkets(category, region),
@@ -160,7 +164,7 @@ function MarketsPage() {
     try {
       await log({
         product: "prediction",
-        venue: "polymarket",
+        venue: market.venue,
         symbolOrMarket: market.id,
         side,
         sizeUsd: usd,
@@ -202,15 +206,17 @@ function MarketsPage() {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Predictions</h1>
             <p className="mt-1 text-xs text-muted-foreground">
-              Explore what the world is predicting
+              Nigerian community forecasts and global prediction markets
             </p>
           </div>
-          <Link
-            to="/my-positions"
-            className="rounded-lg px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10"
-          >
-            Positions
-          </Link>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" onClick={() => setCreateOpen(true)}>
+              <Plus className="h-4 w-4" /> Create market
+            </Button>
+            <Link to="/my-positions" className="rounded-lg px-3 py-2 text-sm font-medium text-primary hover:bg-primary/10">
+              Positions
+            </Link>
+          </div>
         </div>
         <label className="relative block">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -232,7 +238,7 @@ function MarketsPage() {
                 key={market.id}
                 className="w-[min(82vw,330px)] shrink-0 snap-start rounded-2xl border border-border/70 bg-card p-4 shadow-sm"
               >
-                <MarketHeading market={market} />
+              <MarketHeading market={market} />
                 <div className="my-4 flex items-center justify-between text-xs text-muted-foreground">
                   <span className="capitalize">{market.category}</span>
                   <span>{compactVolume(market.volume)} vol.</span>
@@ -259,12 +265,13 @@ function MarketsPage() {
 
       <section className="space-y-3">
         <SectionTitle>Categories</SectionTitle>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {(
             [
               ["politics", "Politics", Globe2],
               ["sports", "Sports", Trophy],
-              ["finance", "Crypto", CircleDollarSign],
+              ["finance", "Finance", CircleDollarSign],
+              ["entertainment", "Entertainment", WalletCards],
             ] as const
           ).map(([value, label, Icon]) => (
             <button
@@ -285,7 +292,7 @@ function MarketsPage() {
       <section className="space-y-3">
         <SectionTitle>Popular today</SectionTitle>
         <div className="flex flex-wrap gap-2">
-          {topics.map((item) => (
+          {(region === "nigeria" ? nigeriaTopics : globalTopics).map((item) => (
             <button
               key={item}
               onClick={() => {
@@ -302,7 +309,7 @@ function MarketsPage() {
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <SectionTitle>Trending</SectionTitle>
+          <SectionTitle>{region === "nigeria" ? "Nigeria markets" : "Trending"}</SectionTitle>
           <div className="flex items-center gap-2">
             <select
               aria-label="Region"
@@ -335,6 +342,18 @@ function MarketsPage() {
                 className="rounded-2xl border border-border/60 bg-card p-3.5 shadow-sm sm:p-4"
               >
                 <MarketHeading market={market} />
+                <div className="mt-2 flex items-center gap-2">
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${market.venue === "hawq" ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"}`}>
+                    {market.venue === "hawq" ? "HawQ community" : "Polymarket"}
+                  </span>
+                  <span className="text-[10px] capitalize text-muted-foreground">{market.category}</span>
+                </div>
+                {market.description && <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{market.description}</p>}
+                {market.venue === "hawq" && market.resolutionSource && (
+                  <a href={market.resolutionSource} target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs text-primary hover:underline">
+                    View resolution source
+                  </a>
+                )}
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <div className="flex items-center justify-between gap-2 rounded-lg bg-secondary/40 px-2 py-1.5">
                     <span className="text-xs text-muted-foreground">
@@ -412,7 +431,7 @@ function MarketsPage() {
                   htmlFor="prediction-stake"
                   className="text-sm font-medium"
                 >
-                  Amount to bet
+                  Simulated stake
                 </label>
                 <div className="relative">
                   <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -478,9 +497,8 @@ function MarketsPage() {
               <div className="flex gap-2 rounded-xl border border-warning/30 bg-warning/5 p-3 text-xs leading-relaxed text-muted-foreground">
                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
                 <p>
-                  This is a simulated demo bet. HawQ records a paper position
-                  only; it does not place a Polymarket order or request a wallet
-                  signature.
+                  This is a simulated demo forecast. HawQ records a paper position
+                  only; it does not place a real order, transfer funds, or request a wallet signature.
                 </p>
               </div>
 
@@ -511,6 +529,96 @@ function MarketsPage() {
           )}
         </DialogContent>
       </Dialog>
+      <CreateMarketDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={() => queryClient.invalidateQueries({ queryKey: ["hawq-predictions-markets"] })}
+      />
     </main>
+  );
+}
+
+function CreateMarketDialog({
+  open,
+  onOpenChange,
+  onCreated,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCreated: () => Promise<unknown>;
+}) {
+  const [adminKey, setAdminKey] = useState("");
+  const [question, setQuestion] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("politics");
+  const [image, setImage] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [resolutionSource, setResolutionSource] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSaving(true);
+    try {
+      const created = await createHawqMarket(adminKey, {
+        question,
+        description,
+        category,
+        image,
+        endDate: new Date(endDate).toISOString(),
+        resolutionSource,
+      });
+      toast.success("HawQ market created", { description: created.question });
+      setQuestion("");
+      setDescription("");
+      setImage("");
+      setEndDate("");
+      setResolutionSource("");
+      onOpenChange(false);
+      await onCreated();
+    } catch (error) {
+      toast.error("Could not create market", {
+        description: error instanceof Error ? error.message : "Check the details and try again.",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90dvh] max-w-lg overflow-y-auto rounded-2xl p-5 sm:p-6">
+        <DialogHeader className="text-left">
+          <DialogTitle>Create a Nigeria market</DialogTitle>
+          <DialogDescription>
+            Publish a HawQ play-money forecast with an image and a verifiable resolution source.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={submit} className="space-y-3">
+          <Input type="password" autoComplete="current-password" placeholder="HawQ markets admin key" value={adminKey} onChange={(event) => setAdminKey(event.target.value)} required />
+          <Input placeholder="Market question" minLength={12} maxLength={240} value={question} onChange={(event) => setQuestion(event.target.value)} required />
+          <textarea className="min-h-20 w-full rounded-xl border border-border bg-background p-3 text-sm" placeholder="Context (optional)" maxLength={1200} value={description} onChange={(event) => setDescription(event.target.value)} />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <select aria-label="Market category" className="h-10 rounded-xl border border-border bg-background px-3 text-sm" value={category} onChange={(event) => setCategory(event.target.value)}>
+              <option value="politics">Politics</option>
+              <option value="finance">Finance</option>
+              <option value="sports">Sports</option>
+              <option value="entertainment">Entertainment</option>
+              <option value="other">Other</option>
+            </select>
+            <Input type="datetime-local" aria-label="Market close date" value={endDate} onChange={(event) => setEndDate(event.target.value)} required />
+          </div>
+          <Input type="url" placeholder="Market image URL (https://...)" value={image} onChange={(event) => setImage(event.target.value)} required />
+          {image && <img key={image} src={image} alt="Market image preview" className="h-28 w-full rounded-xl bg-secondary object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} />}
+          <Input type="url" placeholder="Resolution source URL" value={resolutionSource} onChange={(event) => setResolutionSource(event.target.value)} required />
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Markets are Nigeria-tagged and use simulated picks only. The admin key is sent to the API for this request and is not saved in browser storage.
+          </p>
+          <Button type="submit" className="w-full" disabled={saving}>
+            {saving ? "Creating market…" : "Publish market"}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

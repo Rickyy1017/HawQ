@@ -102,8 +102,9 @@ The strategies are intentionally simple research examples. Historical bars do no
 1. The worker requests active, open Polymarket markets in pages of at most 100 records, up to the configured page cap.
 2. It maps market and parent-event image/icon URLs, classifies markets by topic and region, and parses yes/no prices.
 3. Market metadata is upserted while price, volume, and liquidity snapshots are appended.
-4. The API returns the latest snapshot for each market and filters out database records without market artwork.
-5. The web UI renders the market artwork and records yes/no picks as simulated HawQ positions. It never sends an order to Polymarket.
+4. HawQ-authored Nigeria markets live in `hawq_prediction_markets`. An admin-key protected API creates and resolves them; each market requires an image, close date, and public resolution source.
+5. The API combines Polymarket snapshots with open HawQ markets. HawQ prices are a smoothed 50/50 prior updated from simulated yes/no positions, not exchange prices or real-money odds.
+6. The web UI defaults to Nigeria, can switch to all regions, labels the source, and records picks as simulated positions. HawQ markets never send orders or request wallet signatures.
 
 ### Chain and wallet data
 

@@ -26,6 +26,7 @@ export const perpMarketSchema = z.object({
 export type PerpMarket = z.infer<typeof perpMarketSchema>;
 export const predictionMarketSchema = z.object({
   id: z.string(),
+  venue: z.enum(["polymarket", "hawq"]),
   question: z.string(),
   image: z.string().nullable().optional(),
   icon: z.string().nullable().optional(),
@@ -34,6 +35,11 @@ export const predictionMarketSchema = z.object({
   yesPrice: z.number(),
   noPrice: z.number(),
   volume: z.number(),
+  endDate: z.union([z.string(), z.number()]).nullable().optional(),
+  description: z.string().nullable().optional(),
+  resolutionSource: z.string().nullable().optional(),
+  status: z.enum(["open", "closed", "resolved"]).optional(),
+  liquidity: z.number().optional(),
 });
 export type PredictionMarket = z.infer<typeof predictionMarketSchema>;
 const positionResponseSchema = z
@@ -213,6 +219,26 @@ export async function getPredictionMarkets(
   return z
     .array(predictionMarketSchema)
     .parse(await request(`/api/predictions/markets${query}`));
+}
+
+export async function createHawqMarket(
+  adminKey: string,
+  market: {
+    question: string;
+    description: string;
+    category: string;
+    image: string;
+    endDate: string;
+    resolutionSource: string;
+  },
+): Promise<PredictionMarket> {
+  return predictionMarketSchema.parse(
+    await request("/api/predictions/markets", {
+      method: "POST",
+      headers: { "x-hawq-admin-key": adminKey },
+      body: JSON.stringify(market),
+    }),
+  );
 }
 export async function getPositions(): Promise<Position[]> {
   return z

@@ -86,12 +86,12 @@ export const PerpsMarketSchema = z.object({
 export type PerpsMarket = z.infer<typeof PerpsMarketSchema>;
 
 // ── Predictions (Polymarket) ────────────────────────────────────────────────
-export const PREDICTION_CATEGORIES = ["sports", "politics", "finance", "other"] as const;
+export const PREDICTION_CATEGORIES = ["sports", "politics", "finance", "entertainment", "other"] as const;
 export type PredictionCategory = (typeof PREDICTION_CATEGORIES)[number];
 
 export const PredictionMarketSchema = z.object({
   id: z.string(),
-  venue: z.literal("polymarket"),
+  venue: z.enum(["polymarket", "hawq"]),
   question: z.string(),
   image: z.string().url().nullable().optional(),
   icon: z.string().url().nullable().optional(),
@@ -102,8 +102,24 @@ export const PredictionMarketSchema = z.object({
   noPrice: z.number(),
   volume: z.number(),
   liquidity: z.number(),
+  description: z.string().nullable().optional(),
+  resolutionSource: z.string().nullable().optional(),
+  status: z.enum(["open", "closed", "resolved"]).optional(),
 });
 export type PredictionMarket = z.infer<typeof PredictionMarketSchema>;
+
+export const CreateHawqPredictionMarketSchema = z.object({
+  question: z.string().trim().min(12).max(240),
+  description: z.string().trim().max(1200).optional().default(""),
+  category: z.enum(PREDICTION_CATEGORIES),
+  image: z.string().url().refine((value) => value.startsWith("https://"), "Image URL must use HTTPS."),
+  endDate: z.string().datetime(),
+  resolutionSource: z.string().url().refine((value) => value.startsWith("https://"), "Resolution source URL must use HTTPS."),
+}).refine((market) => new Date(market.endDate).getTime() > Date.now(), {
+  message: "The close date must be in the future.",
+  path: ["endDate"],
+});
+export type CreateHawqPredictionMarket = z.infer<typeof CreateHawqPredictionMarketSchema>;
 
 // ── Simulated positions (demo scope — never real money) ────────────────────
 // product 'perp': a REAL Hyperliquid TESTNET order (real matching engine, fake funds).
