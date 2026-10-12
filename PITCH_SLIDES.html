@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HawQ | Pitch</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #09090f;
+        --panel: #13131d;
+        --panel-2: #191824;
+        --text: #f5f3fa;
+        --muted: #a7a2b8;
+        --line: #ffffff19;
+        --purple: #a77bff;
+        --teal: #45d6bc;
+        --red: #ff7185;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        background: radial-gradient(ellipse at 12% 8%, #582c8733, transparent 36%),
+          radial-gradient(ellipse at 92% 90%, #1c806e22, transparent 34%), var(--bg);
+        color: var(--text);
+        font: 16px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      }
+      .deck { width: min(100vw, 177.78vh); height: min(56.25vw, 100vh); position: relative; }
+      .slide {
+        position: absolute; inset: 0; display: none; flex-direction: column;
+        padding: 5.2% 6.2% 4.2%; overflow: hidden;
+        background: linear-gradient(135deg, #0c0b12 0%, #0a0a10 62%, #11101a 100%);
+        border: 1px solid #ffffff10;
+      }
+      .slide.active { display: flex; animation: appear .28s ease-out; }
+      @keyframes appear { from { opacity: .55; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+      .topline { display:flex; align-items:center; justify-content:space-between; color:var(--muted); font-size:clamp(10px,1vw,14px); letter-spacing:.18em; text-transform:uppercase; }
+      .brand { display:flex; align-items:center; gap:10px; color:var(--text); font-weight:700; letter-spacing:.02em; text-transform:none; }
+      .mark { width:28px;height:28px;display:grid;place-items:center;border:1px solid #a77bff66;border-radius:9px;color:var(--purple);font-weight:800; }
+      .kicker { margin-top:auto; color:var(--purple); font-size:clamp(11px,1vw,15px); letter-spacing:.22em; text-transform:uppercase; }
+      h1,h2,p { margin:0; }
+      h1 { max-width:950px; margin-top:14px; font-size:clamp(38px,6vw,82px); line-height:1.02; letter-spacing:-.055em; }
+      h2 { font-size:clamp(27px,3.1vw,44px); line-height:1.08; letter-spacing:-.04em; }
+      .lead { max-width:850px; margin-top:22px; color:#cbc6d5; font-size:clamp(16px,1.65vw,23px); line-height:1.55; }
+      .accent { color:var(--purple); }
+      .footer { display:flex; justify-content:space-between; align-items:center; margin-top:auto; padding-top:24px; color:#817b91; font-size:clamp(10px,.9vw,13px); }
+      .hero-orbit { position:absolute; right:8%; top:24%; width:32%; aspect-ratio:1; border:1px solid #a77bff40; border-radius:50%; box-shadow:0 0 90px #9d67ff20,inset 0 0 60px #45d6bc10; }
+      .hero-orbit:before,.hero-orbit:after { content:""; position:absolute; inset:13%; border:1px solid #45d6bc36; border-radius:50%; transform:rotate(-35deg) scaleX(1.5); }
+      .hero-orbit:after { inset:29%; border-color:#a77bff6b; transform:rotate(35deg) scaleX(1.5); }
+      .orbit-core { position:absolute; inset:0; display:grid; place-items:center; color:var(--teal); font-size:clamp(40px,6vw,84px); font-weight:750; letter-spacing:-.08em; }
+      .pill-row { display:flex; flex-wrap:wrap; gap:10px; margin-top:32px; }
+      .pill { border:1px solid var(--line); background:#ffffff06; color:#d6d1e0; border-radius:999px; padding:8px 14px; font-size:clamp(11px,1vw,14px); }
+      .grid { display:grid; gap:16px; margin-top:36px; }
+      .three { grid-template-columns:repeat(3,1fr); }
+      .two { grid-template-columns:repeat(2,1fr); }
+      .card { min-height:190px; padding:22px; border:1px solid var(--line); border-radius:18px; background:linear-gradient(145deg,#181722,#111119); }
+      .card .num { color:var(--purple); font:600 clamp(12px,1vw,14px)/1.2 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.12em; }
+      .card h3 { margin:20px 0 9px; font-size:clamp(18px,1.8vw,25px); letter-spacing:-.025em; }
+      .card p { color:var(--muted); font-size:clamp(13px,1.15vw,16px); line-height:1.5; }
+      .statrow { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:26px; }
+      .stat { padding:16px; border:1px solid var(--line); border-radius:14px; background:#ffffff05; }
+      .stat b { display:block; font-size:clamp(21px,2.3vw,32px); color:var(--teal); letter-spacing:-.04em; }
+      .stat span { color:var(--muted); font-size:clamp(10px,.9vw,13px); }
+      .flow { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:34px; align-items:stretch; }
+      .step { position:relative; padding:18px; border-radius:16px; border:1px solid var(--line); background:var(--panel); }
+      .step:not(:last-child):after { content:"→"; position:absolute; right:-18px; top:42%; z-index:1; color:var(--purple); font-size:24px; font-weight:700; }
+      .step small { color:var(--purple); letter-spacing:.12em; text-transform:uppercase; }
+      .step b { display:block; margin:14px 0 6px; font-size:clamp(15px,1.5vw,21px); }
+      .step p { color:var(--muted); font-size:clamp(11px,1vw,14px); }
+      .callout { margin-top:18px; padding:16px 18px; border-left:3px solid var(--teal); background:#45d6bc0c; color:#c7c2d0; font-size:clamp(12px,1.05vw,15px); }
+      .closing { margin-top:34px; padding:24px; border:1px solid #a77bff55; border-radius:18px; background:linear-gradient(120deg,#a77bff15,#45d6bc0a); }
+      .closing b { font-size:clamp(21px,2.4vw,34px); letter-spacing:-.03em; }
+      .controls { position:fixed; right:22px; bottom:18px; display:flex; align-items:center; gap:8px; z-index:9; }
+      .controls button { width:38px;height:38px;border:1px solid #ffffff22;border-radius:50%;background:#15141e;color:var(--text);cursor:pointer;font-size:18px; }
+      .controls button:hover { border-color:var(--purple); }
+      .counter { min-width:52px;text-align:center;color:var(--muted);font:12px ui-monospace,monospace; }
+      .hint { position:fixed; left:22px; bottom:24px; color:#777184; font-size:11px; }
+      @media(max-width:700px) {
+        body { overflow:auto; }
+        .deck { width:100vw;height:100svh; }
+        .slide { padding:8% 7% 18%; overflow:auto; }
+        .hero-orbit { opacity:.24;right:-12%;top:24%;width:48%; }
+        .three,.two { grid-template-columns:1fr; }
+        .grid { gap:10px;margin-top:24px; }
+        .card { min-height:auto;padding:15px; }
+        .card h3 { margin:10px 0 5px; }
+        .statrow { grid-template-columns:repeat(2,1fr); }
+        .flow { grid-template-columns:1fr 1fr; gap:9px; }
+        .step:not(:last-child):after { display:none; }
+        .hint { display:none; }
+      }
+      @media print {
+        @page { size:13.333in 7.5in; margin:0; }
+        body { display:block;background:#09090f;overflow:visible;-webkit-print-color-adjust:exact;print-color-adjust:exact; }
+        .deck { width:13.333in;height:auto; }
+        .slide,.slide.active { position:relative;display:flex;width:13.333in;height:7.5in;page-break-after:always;animation:none; }
+        .controls,.hint { display:none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="deck" aria-live="polite">
+      <section class="slide active">
+        <div class="topline"><div class="brand"><span class="mark">H</span> HawQ</div><span>Pitch · 01</span></div>
+        <div class="hero-orbit"><div class="orbit-core">H</div></div>
+        <div class="kicker">Crypto research, in one place</div>
+        <h1>See the market.<br /><span class="accent">Test your thinking.</span></h1>
+        <p class="lead">HawQ brings DeFi analytics, prediction markets, live crypto markets, and quantitative research into one workspace.</p>
+        <div class="pill-row"><span class="pill">DeFi & chain analytics</span><span class="pill">Predictions</span><span class="pill">Spot & perps</span><span class="pill">Quant research</span></div>
+        <div class="footer"><span>Built solo in Lagos, Nigeria</span><span>HawQ · Pitch</span></div>
+      </section>
+
+      <section class="slide">
+        <div class="topline"><div class="brand"><span class="mark">H</span> HawQ</div><span>Challenge · 02</span></div>
+        <div class="kicker">The problem</div>
+        <h2>Crypto decisions start with<br /><span class="accent">scattered context.</span></h2>
+        <p class="lead">Market prices, protocol health, chain activity, and prediction markets are usually spread across separate tools. HawQ gives users one place to explore those signals before they act.</p>
+        <div class="grid three">
+          <article class="card"><span class="num">01 / DEFI</span><h3>Protocol health</h3><p>Compare TVL across protocols and chains, and follow changes over time.</p></article>
+          <article class="card"><span class="num">02 / MARKETS</span><h3>Live market context</h3><p>Explore Hyperliquid spot and perpetual markets, price charts, funding, and open interest.</p></article>
+          <article class="card"><span class="num">03 / OUTCOMES</span><h3>Event expectations</h3><p>Browse prediction market questions, prices, categories, and available artwork.</p></article>
+        </div>
+        <div class="footer"><span>One research workspace</span><span>02 / 05</span></div>
+      </section>
+
+      <section class="slide">
+        <div class="topline"><div class="brand"><span class="mark">H</span> HawQ</div><span>Product · 03</span></div>
+        <div class="kicker">Quant research</div>
+        <h2>From market history<br />to a <span class="accent">testable strategy.</span></h2>
+        <p class="lead">Quant Lab compares two transparent models—EMA trend following and RSI mean reversion—against historical Hyperliquid data.</p>
+        <div class="statrow">
+          <div class="stat"><b>EMA</b><span>Trend-following model</span></div>
+          <div class="stat"><b>RSI</b><span>Mean-reversion model</span></div>
+          <div class="stat"><b>Costs</b><span>Fees, slippage & available funding</span></div>
+          <div class="stat"><b>Holdout</b><span>Chronological out-of-sample window</span></div>
+        </div>
+        <div class="callout">Results are historical simulations, not predictions. The model does not simulate order-book depth, liquidation, queue position, or market impact.</div>
+        <div class="footer"><span>Research tools, not automated execution</span><span>03 / 05</span></div>
+      </section>
+
+      <section class="slide">
+        <div class="topline"><div class="brand"><span class="mark">H</span> HawQ</div><span>Workflow · 04</span></div>
+        <div class="kicker">A practical research loop</div>
+        <h2>Inspect. Compare. <span class="accent">Simulate.</span></h2>
+        <div class="flow">
+          <div class="step"><small>01 · Choose</small><b>Select a market</b><p>Pick an asset and historical candle interval.</p></div>
+          <div class="step"><small>02 · Configure</small><b>Set your assumptions</b><p>Adjust model periods, capital, fees, and slippage.</p></div>
+          <div class="step"><small>03 · Evaluate</small><b>Review the evidence</b><p>Compare returns, drawdown, Sharpe, trades, funding, and holdout results.</p></div>
+          <div class="step"><small>04 · Paper trade</small><b>Track a position</b><p>Enter your own price and monitor a simulated position against live prices.</p></div>
+        </div>
+        <div class="callout">Paper positions are stored in this browser. HawQ does not send exchange orders or move funds.</div>
+        <div class="footer"><span>Live public data · simulated execution</span><span>04 / 05</span></div>
+      </section>
+
+      <section class="slide">
+        <div class="topline"><div class="brand"><span class="mark">H</span> HawQ</div><span>Founder · 05</span></div>
+        <div class="kicker">Why I’m building HawQ</div>
+        <h2>Built end-to-end,<br /><span class="accent">by one curious builder.</span></h2>
+        <p class="lead">I built HawQ solo—from the product experience and web app to the API, data ingestion, and quantitative research tools. I’m building it because crypto research is fragmented, and I want to make it easier to move from market context to a clearly tested idea.</p>
+        <div class="closing"><b>HawQ</b><p class="lead" style="margin-top:8px">Research the market. Test your thesis. Track the result.</p></div>
+        <div class="footer"><span>Thank you</span><span>05 / 05</span></div>
+      </section>
+    </div>
+    <div class="hint">Use ← → or click to move · F11 for fullscreen · Print to save PDF</div>
+    <nav class="controls" aria-label="Slide navigation">
+      <button type="button" id="prev" aria-label="Previous slide">‹</button>
+      <span class="counter" id="counter">01 / 05</span>
+      <button type="button" id="next" aria-label="Next slide">›</button>
+    </nav>
+    <script>
+      const slides = [...document.querySelectorAll(".slide")];
+      const counter = document.getElementById("counter");
+      let index = 0;
+      function show(next) {
+        index = (next + slides.length) % slides.length;
+        slides.forEach((slide, i) => slide.classList.toggle("active", i === index));
+        counter.textContent = `${String(index + 1).padStart(2, "0")} / ${String(slides.length).padStart(2, "0")}`;
+      }
+      document.getElementById("prev").addEventListener("click", () => show(index - 1));
+      document.getElementById("next").addEventListener("click", () => show(index + 1));
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowRight" || event.key === " ") show(index + 1);
+        if (event.key === "ArrowLeft") show(index - 1);
+        if (event.key.toLowerCase() === "f") document.documentElement.requestFullscreen?.();
+      });
+    </script>
+  </body>
+</html>

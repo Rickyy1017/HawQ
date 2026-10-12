@@ -135,7 +135,7 @@ function Dashboard() {
           (p.category ?? "").toLowerCase().includes(q),
       );
     }
-    return getTopProtocolsByTVL(list, query.trim() ? 25 : 15);
+    return getTopProtocolsByTVL(list, query.trim() ? 25 : 30);
   }, [protocols.data, query, chainFilter]);
 
   const insights = useMemo(() => {
