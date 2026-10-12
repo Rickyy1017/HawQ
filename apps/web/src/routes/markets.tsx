@@ -71,23 +71,22 @@ function SectionTitle({ children }: { children: ReactNode }) {
 }
 
 function MarketHeading({ market }: { market: PredictionMarket }) {
-  const [imageState, setImageState] = useState<"primary" | "fallback" | "failed">("primary");
-  const image = market.image || market.icon;
-  const fallbackImage = market.venue === "hawq" ? marketArtworkFallback(market) : null;
-  useEffect(() => setImageState("primary"), [image, fallbackImage]);
-  const displayImage = imageState === "fallback" ? fallbackImage : image || fallbackImage;
+  const hawqImage = market.venue === "hawq" ? artworkForMarket(market) : null;
+  const [marketImageAttempt, setMarketImageAttempt] = useState<"proxy" | "source" | "failed">("proxy");
+  useEffect(() => setMarketImageAttempt("proxy"), [hawqImage]);
+  const image = hawqImage ? (marketImageAttempt === "source" ? hawqImage : proxiedMarketImageUrl(hawqImage)) : market.image || market.icon;
   return (
     <div className="flex min-w-0 items-center gap-3">
-      {displayImage && imageState !== "failed" ? (
+      {image && marketImageAttempt !== "failed" ? (
         <img
-          src={displayImage}
+          src={image}
           alt=""
           className="h-10 w-10 shrink-0 rounded-xl bg-secondary object-cover"
           onError={() => {
-            if (image && fallbackImage && image !== fallbackImage && imageState === "primary") {
-              setImageState("fallback");
+            if (hawqImage && marketImageAttempt === "proxy") {
+              setMarketImageAttempt("source");
             } else {
-              setImageState("failed");
+              setMarketImageAttempt("failed");
             }
           }}
         />
@@ -103,30 +102,7 @@ function MarketHeading({ market }: { market: PredictionMarket }) {
   );
 }
 
-function marketArtworkFallback(market: Pick<PredictionMarket, "category" | "question">) {
-  if (market.category === "politics") {
-    if (market.question.includes("outside the APC and PDP")) return "/market-artwork/inec.svg";
-    if (market.question.includes("APC")) return "/market-artwork/apc.svg";
-    if (market.question.includes("PDP")) return "/market-artwork/pdp.svg";
-    if (market.question.includes("woman win a governorship")) return "/market-artwork/woman-governor.svg";
-    return "/market-artwork/inec.svg";
-  }
-  if (market.category === "finance") {
-    if (market.question.startsWith("Will the NGX")) return "/market-artwork/ngx.svg";
-    if (market.question.startsWith("Will the CBN's official USD/NGN")) return "/market-artwork/naira.svg";
-    return "/market-artwork/cbn.svg";
-  }
-  if (market.category === "sports") {
-    return market.question.startsWith("Will Nigeria's Super Falcons")
-      ? "/market-artwork/super-falcons.svg"
-      : "/market-artwork/afcon-pamoja.svg";
-  }
-  return market.question.includes("Oscar")
-    ? "/market-artwork/oscars.svg"
-    : "/market-artwork/grammy.svg";
-}
-
-function artworkForMarket(market: HawqAdminMarket) {
+function artworkForMarket(market: Pick<PredictionMarket, "category" | "question">) {
   if (market.category === "politics") {
     if (market.question.includes("outside the APC and PDP")) return "https://pbs.twimg.com/profile_images/1962564103559368705/P8L3ibiF.jpg";
     if (market.question.includes("APC")) return "https://cdn.legit.ng/tags/600x600/a0da72ecbc113504.jpeg?v=1";
@@ -135,12 +111,11 @@ function artworkForMarket(market: HawqAdminMarket) {
   }
   if (market.category === "finance") {
     if (market.question.startsWith("Will the NGX")) return "https://d1jcea4y7xhp7l.cloudfront.net/2021/04/NGX-Logo.png";
-    if (market.question.startsWith("Will the CBN's official USD/NGN")) return "https://s3-ap-southeast-1.amazonaws.com/mint-news/buy-nigerian-polymer-banknote.jpg";
     return "https://getpocketmoni.com/images/cbn.png";
   }
   if (market.category === "sports") {
     return market.question.startsWith("Will Nigeria's Super Falcons")
-      ? "https://www.classicfootballshirts.co.uk/cdn-cgi/image/fit%3Dpad%2Cq%3D80%2Cw%3D1000%2Ch%3D1000%2Cf%3Dwebp/pub/media/catalog/product/1/0/100425505872-1_s3s2psavmapny8mg.jpg"
+      ? "https://gdb.voanews.com/01460000-0aff-0242-0f5f-08da666b0681_w1200_h630.jpg"
       : "https://s.yimg.com/os/en/foot_africa_articles_352/de010fbfd162ad7e2408c01496943651";
   }
   return market.question.includes("Oscar")
