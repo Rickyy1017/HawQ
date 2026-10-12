@@ -71,17 +71,25 @@ function SectionTitle({ children }: { children: ReactNode }) {
 }
 
 function MarketHeading({ market }: { market: PredictionMarket }) {
-  const [imageFailed, setImageFailed] = useState(false);
+  const [imageState, setImageState] = useState<"primary" | "fallback" | "failed">("primary");
   const image = market.image || market.icon;
-  useEffect(() => setImageFailed(false), [image]);
+  const fallbackImage = market.venue === "hawq" ? marketArtworkFallback(market) : null;
+  useEffect(() => setImageState("primary"), [image, fallbackImage]);
+  const displayImage = imageState === "fallback" ? fallbackImage : image || fallbackImage;
   return (
     <div className="flex min-w-0 items-center gap-3">
-      {image && !imageFailed ? (
+      {displayImage && imageState !== "failed" ? (
         <img
-          src={image}
+          src={displayImage}
           alt=""
           className="h-10 w-10 shrink-0 rounded-xl bg-secondary object-cover"
-          onError={() => setImageFailed(true)}
+          onError={() => {
+            if (image && fallbackImage && image !== fallbackImage && imageState === "primary") {
+              setImageState("fallback");
+            } else {
+              setImageState("failed");
+            }
+          }}
         />
       ) : (
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary text-primary">
@@ -93,6 +101,29 @@ function MarketHeading({ market }: { market: PredictionMarket }) {
       </p>
     </div>
   );
+}
+
+function marketArtworkFallback(market: Pick<PredictionMarket, "category" | "question">) {
+  if (market.category === "politics") {
+    if (market.question.includes("outside the APC and PDP")) return "/market-artwork/inec.svg";
+    if (market.question.includes("APC")) return "/market-artwork/apc.svg";
+    if (market.question.includes("PDP")) return "/market-artwork/pdp.svg";
+    if (market.question.includes("woman win a governorship")) return "/market-artwork/woman-governor.svg";
+    return "/market-artwork/inec.svg";
+  }
+  if (market.category === "finance") {
+    if (market.question.startsWith("Will the NGX")) return "/market-artwork/ngx.svg";
+    if (market.question.startsWith("Will the CBN's official USD/NGN")) return "/market-artwork/naira.svg";
+    return "/market-artwork/cbn.svg";
+  }
+  if (market.category === "sports") {
+    return market.question.startsWith("Will Nigeria's Super Falcons")
+      ? "/market-artwork/super-falcons.svg"
+      : "/market-artwork/afcon-pamoja.svg";
+  }
+  return market.question.includes("Oscar")
+    ? "/market-artwork/oscars.svg"
+    : "/market-artwork/grammy.svg";
 }
 
 function artworkForMarket(market: HawqAdminMarket) {
