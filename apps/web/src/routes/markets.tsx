@@ -117,6 +117,12 @@ function artworkForMarket(market: HawqAdminMarket) {
     : "https://datg-cms-source-repo.s3.amazonaws.com/ABC/ComingSoon/grammys2027/277b20e8-2cf2-4f53-b3c4-edf0347073e9.jpg";
 }
 
+function proxiedMarketImageUrl(source: string) {
+  const sourceUrl = new URL(source);
+  const imagePath = `${sourceUrl.host}${sourceUrl.pathname}${sourceUrl.search}`;
+  return `https://images.weserv.nl/?url=${encodeURIComponent(imagePath)}&w=128&h=128&fit=cover`;
+}
+
 function PriceButton({
   side,
   price,
@@ -632,10 +638,10 @@ function CreateMarketDialog({
       // Always refresh the seeded markets. Their earlier artwork URLs may point
       // to removed local assets, or to external images that no longer load.
       for (const market of nigeriaMarkets) {
-        await updateHawqMarketImage(adminKey, market.id, artworkForMarket(market));
+        await updateHawqMarketImage(adminKey, market.id, proxiedMarketImageUrl(artworkForMarket(market)));
       }
       toast.success(`Updated images for ${nigeriaMarkets.length} Nigeria markets`, {
-        description: "Each market now uses imagery for its specific party, institution, team, or event.",
+        description: "Images are resized and cached for reliable loading on market cards.",
       });
       await loadManagedMarkets();
       await onCreated();
